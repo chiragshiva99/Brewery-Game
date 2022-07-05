@@ -8,10 +8,12 @@ addNewEntry <- function(infoDF, row, value) {
     added <- T
   }
 
-  c(infoDF, added)
+  list(infoDF, added)
 }
 
-vector.is.empty <- function(x) return(length(x) ==0 )
+vector.is.empty <- function(x) {
+  return(length(x) ==0 )
+}
 
 ## Beer Tanks
 tankStatus <- function(tankInfo, tankNo) {

@@ -18,8 +18,11 @@ ui <- fluidPage(
 
     # Application title
     titlePanel("The Brewery Game"),
-    fluidRow(column(2,h3("Money"),
-             htmlOutput("money"), offset=1)),
+    fluidRow(
+      column(2,h3("Money"),
+               htmlOutput("money"), offset=1),
+      column(2, h3("Day"),
+                htmlOutput("day"))),
     fluidRow(
       column(3, h3("Raw Materials"),
                htmlOutput("maltQty"),
@@ -58,6 +61,8 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  
+  ## Initializing stuff
   rawMat <- c("Malt", "Hops", "Yeast")
   tanks <-  as.data.frame(matrix(nrow=4, ncol=2))
   colnames(tanks) <- c("Beers", "Days")
@@ -82,15 +87,16 @@ server <- function(input, output) {
   orderComplete <- 2
   
   #Reactive Values
-  vals <- reactiveValues(money=10000, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
+  vals <- reactiveValues(money=10000, day=1, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
   
-  ## Money
+  ## Money & day
   output$money <- renderUI({paste("$", vals$money)})
+  output$day <- renderUI({vals$day})
   
   ## Advance Button
   
   observeEvent(input$advance, {
-    
+    vals$day <- vals$day + 1
     ## Increase the number of days for tanks and Order
     vals$tanks <- incrementDays(vals$tanks)
     vals$rawMatOrder <- incrementDays(vals$rawMatOrder)
@@ -123,7 +129,6 @@ server <- function(input, output) {
     if (! vector.is.empty(orderArrived) ){
       vals$rawMatOrder <- vals$rawMatOrder[-c(orderArrived),]
     }
-    print(vals$rawMatOrder)
   })
   
   ## Tanks
@@ -152,9 +157,9 @@ server <- function(input, output) {
   
   observeEvent(input$makeBeer, {
     entryResult <- addNewEntry(vals$tanks, vals$tankSelect, vals$beerChosen)
-    vals$tanks <- entryResult[1]
+    vals$tanks <- entryResult[[1]]
     removeModal()
-    if (entryResult[2]) {
+    if (entryResult[[2]]) {
       vals$rawMatQty <- updateRawMatQty(beerReq, vals$rawMatQty, vals$beerChosen)
     } else {
       showModal(modalDialog(
@@ -167,7 +172,6 @@ server <- function(input, output) {
   
   observeEvent(input$purchase, {
     showModal(purchaseModal())
-    print("Purchase")
   })
 
   output$maltQty <- renderUI({paste0("Malts: ", vals$rawMatQty[1])})

@@ -3,7 +3,7 @@
     "path": "C:/Users/Gabriel/Desktop/SUTDshit/Term 5/ESA/BreweryGame/app.R",
     "project_path": "app.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "2010318962",
     "contents": "",
     "dirty": false,
     "created": 1656990227136.0,
@@ -12,16 +12,16 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "105,5",
-        "scrollLine": "95",
+        "cursorPosition": "121,5",
+        "scrollLine": "110",
         "softWrapLines": "true"
     },
     "folds": "",
-    "lastKnownWriteTime": 1657015217,
+    "lastKnownWriteTime": 1657022860,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1657015217032,
+    "last_content_update": 1657022860128,
     "read_only": false,
     "read_only_alternatives": []
 }

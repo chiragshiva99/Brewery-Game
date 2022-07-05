@@ -26,7 +26,8 @@ ui <- fluidPage(
                htmlOutput("hopsQty"),
                htmlOutput("yeastQty"),
              fluidRow(
-               actionButton("purchase", "Purchase")
+               actionButton("purchase", "Purchase"),
+               htmlOutput("currentOrders")
              )
              ),
       column(3, h3("Brewery Tanks"),
@@ -57,12 +58,12 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  rawMat <- c("Malt", "Hops", "Yeast")
   tanks <-  as.data.frame(matrix(nrow=4, ncol=2))
   colnames(tanks) <- c("Beers", "Days")
   
-  rawMatOrder <-  as.data.frame(matrix(nrow=3, ncol=2))
-  colnames(rawMatOrder) <- c("Quantity", "Days")
-  rownames(rawMatOrder) <- c("Malt", "Hops", "Yeast")
+  rawMatOrder <-  data.frame(matrix(nrow=0, ncol=3))
+  colnames(rawMatOrder) <- c("Material","Quantity", "Days")
   
   beerInv <-  c(Lager=10, IPA=20, Stout=30)
   
@@ -89,21 +90,40 @@ server <- function(input, output) {
   ## Advance Button
   
   observeEvent(input$advance, {
-    print("Advance")
     
     ## Increase the number of days for tanks and Order
     vals$tanks <- incrementDays(vals$tanks)
     vals$rawMatOrder <- incrementDays(vals$rawMatOrder)
+    
+    ## Add completed Beers
     completeTanks <- which(vals$tanks["Days"] >= fermentDays)
     completeBeers <- c()
     for (tank in completeTanks) {
       completeBeers <- c(completeBeers, vals$tanks[tank, "Beers"])
       vals$tanks[tank, ] <- NA
     }
-    print(completeBeers)
-    for (beer in completeBeers) {
+    for (beer in completeBeers) { # Can be refactored to use factor instead of list of completeBeers
       vals$beerInv[beer] <- vals$beerInv[beer] + tankSize
     }
+    
+    ## Add completed raw Material Orders
+    collate <- c(c(which((vals$rawMatOrder["Days"] >= orderComplete) & (vals$rawMatOrder["Material"] == "Malt"))), c(which((vals$rawMatOrder["Days"] >= orderComplete) & (vals$rawMatOrder["Material"] == "Hops"))),c(which((vals$rawMatOrder["Days"] >= orderComplete) & (vals$rawMatOrder["Material"] == "Yeast"))))
+    
+    orderArrived <- c()
+    for (idx in collate) {
+      if (!identical(idx, integer(0))) {
+        orderArrived <- c(orderArrived, idx)
+      }
+    }
+    for (order in orderArrived) {
+      mat <- vals$rawMatOrder[order, "Material"]
+      qty <- vals$rawMatOrder[order, "Quantity"]
+      vals$rawMatQty[mat] <- vals$rawMatQty[mat] + qty
+    }
+    if (! vector.is.empty(orderArrived) ){
+      vals$rawMatOrder <- vals$rawMatOrder[-c(orderArrived),]
+    }
+    print(vals$rawMatOrder)
   })
   
   ## Tanks
@@ -131,9 +151,16 @@ server <- function(input, output) {
   })
   
   observeEvent(input$makeBeer, {
-    vals$tanks <- addNewEntry(vals$tanks, vals$tankSelect, vals$beerChosen)
-    vals$rawMatQty <- updateRawMatQty(beerReq, vals$rawMatQty, vals$beerChosen)
+    entryResult <- addNewEntry(vals$tanks, vals$tankSelect, vals$beerChosen)
+    vals$tanks <- entryResult[1]
     removeModal()
+    if (entryResult[2]) {
+      vals$rawMatQty <- updateRawMatQty(beerReq, vals$rawMatQty, vals$beerChosen)
+    } else {
+      showModal(modalDialog(
+        title="Tank is already full", easyClose=T
+      ))
+    }
   })
   
   ## Raw Material
@@ -154,9 +181,16 @@ server <- function(input, output) {
   output$costOfPurchase <- renderUI({paste("Amount:", calculateCost(costInfo, vals$matChosen, vals$purchQty))})
   
   observeEvent(input$purchaseok, {
-    vals$rawMatOrder <- addNewEntry(vals$rawMatOrder, vals$matChosen, vals$purchQty)
+    newEntry <- data.frame(Material=vals$matChosen, Quantity=vals$purchQty, Days=0)
+    vals$rawMatOrder <- rbind(vals$rawMatOrder, newEntry)
     vals$money <- vals$money - calculateCost(costInfo, vals$matChosen, vals$purchQty)
     removeModal()
+  })
+  
+  output$currentOrders <- renderTable({
+    click <- input$purchaseok + input$advance
+    vals$rawMatOrder
+    
   })
   
   ## Beer Inventory

@@ -7,11 +7,20 @@
 #    http://shiny.rstudio.com/
 #
 
+# At the beginning of any R session, record your AWS database password:
+source("dbHelper.R")
+
+# Now, anywhere in your code where the password is needed you can get it using
+getOption("AWSPassword")
+# Otherwise it is hidden. So now this code can be shared with anyone 
+# without giving them access to your personal AWS database.
+
 source("usePackages.R")
 pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","shinydashboard")
 loadPkgs(pkgnames)
 
 source("helper.R")
+source("dbHelper.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -22,7 +31,13 @@ ui <- fluidPage(
       column(2,h3("Money"),
                htmlOutput("money"), offset=1),
       column(2, h3("Day"),
-                htmlOutput("day"))),
+                htmlOutput("day")),
+      column(2, h3("Lost Sales"),
+             htmlOutput("lostSales"),
+             htmlOutput("lostSalesPerBeer")
+             ),
+      column(2,
+             actionButton("reset", "Reset Game"))),
     fluidRow(
       column(3, h3("Raw Materials"),
                htmlOutput("maltQty"),
@@ -71,6 +86,8 @@ server <- function(input, output) {
   colnames(rawMatOrder) <- c("Material","Quantity", "Days")
   
   beerInv <-  c(Lager=10, IPA=10, Stout=10)
+  beerRev <- c(Lager=10, IPA=10, Stout=10)
+  stockOut <- c(Lager=3, IPA=3, Stout=3)
   
   rawMatQty <- c(Malt=30, Hops=30, Yeast=30)
   
@@ -82,6 +99,7 @@ server <- function(input, output) {
   colnames(costInfo) <- c("Fixed", "Variable")
   rownames(costInfo) <- c("Malt", "Hops", "Yeast")
   
+  startingMoney <- 10000
   tankSize <- 10
   fermentDays <- 3
   orderComplete <- 2
@@ -100,12 +118,43 @@ server <- function(input, output) {
   ## Lost Sales Tracking
   lostPerBeer <- c(Lager=0, IPA=0, Stout=0)
   #Reactive Values
-  vals <- reactiveValues(money=10000, day=1, demand=demand, lostCust=0, lostPerBeer=lostPerBeer, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
+  vals <- reactiveValues(money=startingMoney, day=1, demand=demand, lostCust=0, lostPerBeer=lostPerBeer, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
   
-  ## Money & day
+  ## Reset Game 
+  observeEvent(input$reset, {
+    print("resetting")
+    showModal(resetDialog())
+  })
+  
+  observeEvent(input$resetok, {
+    removeModal()
+    totalDemand <- generateDemand(meanArrivalTimes, normDistParams, totalDays)
+    demand <- subset(totalDemand, Day==1)
+    if (nrow(demand) > 0){
+      demand$Day <- 0
+    }
+    
+    vals$money <- startingMoney
+    vals$day <- 1
+    vals$demand <- demand
+    vals$lostCust <- 0
+    vals$lostPerBeer <- lostPerBeer
+    vals$tanks <- tanks
+    vals$beerInv <- beerInv
+    vals$rawMatOrder <- rawMatOrder
+    vals$rawMatQty <- rawMatQty
+  })
+  
+  ## Info params
   output$money <- renderUI({paste("$", vals$money)})
   output$day <- renderUI({vals$day})
-  
+  output$lostSales <- renderUI({paste(vals$lostCust, "Customers Lost")})
+  output$lostSalesPerBeer <- renderTable({
+    click <- vals$advance + vals$lostPerBeer
+    lostTable <- data.frame(matrix(vals$lostPerBeer, nrow=1, ncol=3))
+    colnames(lostTable) <- names(vals$lostPerBeer)
+    lostTable
+    })
   ## Advance Button
   
   observeEvent(input$advance, {
@@ -155,6 +204,7 @@ server <- function(input, output) {
 
         if (unname(vals$beerInv[beerType]) >= qty) {
           vals$beerInv[beerType] <- vals$beerInv[beerType] - qty
+          vals$money <- vals$money + qty*beerRev[beerType]
           removeDemand <- c(removeDemand, row)
         }
         
@@ -162,7 +212,8 @@ server <- function(input, output) {
         dayWait <- vals$demand[row, "Day"]
         if (dayWait >= maxWait) {
           unsatisDemand <- c(unsatisDemand, row)
-          lostPerBeer[beerType] <- lostPerBeer[beerType] + qty
+          vals$lostPerBeer[beerType] <- vals$lostPerBeer[beerType] + qty
+          vals$money <- vals$money - qty*stockOut[beerType]
           removeDemand <- c(removeDemand, row)
         }
       }

@@ -106,3 +106,15 @@ generateDemand <- function(iia, normParam, days) {
   demand <- demand[-c(nrow(demand)),]
   demand
 }
+
+## Reset
+resetDialog <- function() {
+  modalDialog(
+    title="Reset?",
+    div("Are you sure you want to reset?"),
+    footer=tagList(
+      modalButton("Cancel"),
+      actionButton("resetok", "Reset")
+    )
+  )
+}

@@ -51,7 +51,8 @@ ui <- fluidPage(
              htmlOutput("lagerQty"),
              htmlOutput("ipaQty"),
              htmlOutput("stoutQty")),
-      column(3, h3("Customer Demand"))
+      column(3, h3("Customer Demand"),
+             htmlOutput("custDemand"))
     ),
     fluidRow(
       column(2, offset=10,
@@ -61,7 +62,6 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  
   ## Initializing stuff
   rawMat <- c("Malt", "Hops", "Yeast")
   tanks <-  as.data.frame(matrix(nrow=4, ncol=2))
@@ -70,7 +70,7 @@ server <- function(input, output) {
   rawMatOrder <-  data.frame(matrix(nrow=0, ncol=3))
   colnames(rawMatOrder) <- c("Material","Quantity", "Days")
   
-  beerInv <-  c(Lager=10, IPA=20, Stout=30)
+  beerInv <-  c(Lager=10, IPA=10, Stout=10)
   
   rawMatQty <- c(Malt=30, Hops=30, Yeast=30)
   
@@ -85,9 +85,22 @@ server <- function(input, output) {
   tankSize <- 10
   fermentDays <- 3
   orderComplete <- 2
+  totalDays <- 10
+  meanArrivalTimes <- 1
+  maxWait <- 3
+  normDistParams <- c(5,3)
   
+  ## Demand Generation
+  totalDemand <- generateDemand(meanArrivalTimes, normDistParams, totalDays)
+  demand <- subset(totalDemand, Day==1)
+  if (nrow(demand) > 0){
+    demand$Day <- 0
+  }
+  
+  ## Lost Sales Tracking
+  lostPerBeer <- c(Lager=0, IPA=0, Stout=0)
   #Reactive Values
-  vals <- reactiveValues(money=10000, day=1, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
+  vals <- reactiveValues(money=10000, day=1, demand=demand, lostCust=0, lostPerBeer=lostPerBeer, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
   
   ## Money & day
   output$money <- renderUI({paste("$", vals$money)})
@@ -98,8 +111,9 @@ server <- function(input, output) {
   observeEvent(input$advance, {
     vals$day <- vals$day + 1
     ## Increase the number of days for tanks and Order
-    vals$tanks <- incrementDays(vals$tanks)
-    vals$rawMatOrder <- incrementDays(vals$rawMatOrder)
+    vals$tanks <- incrementDays(vals$tanks, "Days")
+    vals$rawMatOrder <- incrementDays(vals$rawMatOrder, "Days")
+    vals$demand <- incrementDays(vals$demand, "Day")
     
     ## Add completed Beers
     completeTanks <- which(vals$tanks["Days"] >= fermentDays)
@@ -129,7 +143,48 @@ server <- function(input, output) {
     if (! vector.is.empty(orderArrived) ){
       vals$rawMatOrder <- vals$rawMatOrder[-c(orderArrived),]
     }
+
+    ## Satisfy and unsatisfied Demand
+    removeDemand <- c()
+    unsatisDemand <- c()
+    if (nrow(vals$demand) > 0) {
+      for (row in 1:nrow(vals$demand)) {
+        # Satisfied?
+        beerType <- vals$demand[row, "Beer"]
+        qty <- vals$demand[row, "Quantity"]
+
+        if (unname(vals$beerInv[beerType]) >= qty) {
+          vals$beerInv[beerType] <- vals$beerInv[beerType] - qty
+          removeDemand <- c(removeDemand, row)
+        }
+        
+        # Unsatisfied?
+        dayWait <- vals$demand[row, "Day"]
+        if (dayWait >= maxWait) {
+          unsatisDemand <- c(unsatisDemand, row)
+          lostPerBeer[beerType] <- lostPerBeer[beerType] + qty
+          removeDemand <- c(removeDemand, row)
+        }
+      }
+    }
+    
+    if (! vector.is.empty(removeDemand)){
+      vals$demand <- vals$demand[-c(removeDemand),]
+    }
+    
+    if (length(unsatisDemand) > 0) {
+      vals$lostCust <- vals$lostCust + length(unsatisDemand)
+    }
+    
+    ## Add New Demand
+    newDemand <- subset(totalDemand, Day==vals$day)
+    if (nrow(newDemand) > 0) {
+      newDemand$Day <-  0
+      vals$demand <- rbind(vals$demand, newDemand)
+    }
+  
   })
+  
   
   ## Tanks
   
@@ -174,9 +229,9 @@ server <- function(input, output) {
     showModal(purchaseModal())
   })
 
-  output$maltQty <- renderUI({paste0("Malts: ", vals$rawMatQty[1])})
-  output$hopsQty <- renderUI({paste0("Hops: ", vals$rawMatQty[2])})
-  output$yeastQty <- renderUI({paste0("Yeast: ", vals$rawMatQty[3])})
+  output$maltQty <- renderUI({paste0("Malt: ", vals$rawMatQty["Malt"])})
+  output$hopsQty <- renderUI({paste0("Hops: ", vals$rawMatQty["Hops"])})
+  output$yeastQty <- renderUI({paste0("Yeast: ", vals$rawMatQty["Yeast"])})
   
   ### Purchase of Raw Mat
   observeEvent(input$quantity, {vals$purchQty <- input$quantity})
@@ -199,11 +254,15 @@ server <- function(input, output) {
   
   ## Beer Inventory
   
-  output$lagerQty <- renderUI({paste0("Lager: ", vals$beerInv[1])})
-  output$ipaQty <- renderUI({paste0("IPA: ", vals$beerInv[2])})
-  output$stoutQty <- renderUI({paste0("Stout: ", vals$beerInv[3])})
+  output$lagerQty <- renderUI({paste0("Lager: ", vals$beerInv["Lager"])})
+  output$ipaQty <- renderUI({paste0("IPA: ", vals$beerInv["IPA"])})
+  output$stoutQty <- renderUI({paste0("Stout: ", vals$beerInv["Stout"])})
   
   ## Demand
+  output$custDemand <- renderTable({
+    click <- input$advance
+    vals$demand
+  })
 }
 
 # Run the application 

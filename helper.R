@@ -81,7 +81,28 @@ calculateCost <- function(costInfo, mat, qty){
 }
 
 ## Advance Button
-incrementDays <- function(frameInfo) {
-  frameInfo["Days"] <- frameInfo["Days"] + 1
+incrementDays <- function(frameInfo, col) {
+  frameInfo[col] <- frameInfo[col] + 1
   frameInfo
+}
+
+## Demand
+generateDemand <- function(iia, normParam, days) {
+  demand <- data.frame(matrix(nrow=0, ncol=3))
+  colnames(demand) <- c("Beer", "Quantity", "Day")
+  beerChoice <- c("Lager", "IPA", "Stout")
+  cumDay <- 0
+  while(cumDay < days) {
+    beerDemand <- beerChoice[sample(1:3, 1)]
+    qty <- ceiling(rnorm(1, mean=normParam[1], sd=normParam[2]))
+    if (qty <=0) {
+      next
+    }
+    dayToNextOrder <- rexp(1, rate=(1/iia))
+    cumDay <- cumDay + dayToNextOrder
+    order <- data.frame(Beer=beerDemand, Quantity=qty, Day=ceiling(cumDay))
+    demand <- rbind(demand, order)
+  }
+  demand <- demand[-c(nrow(demand)),]
+  demand
 }

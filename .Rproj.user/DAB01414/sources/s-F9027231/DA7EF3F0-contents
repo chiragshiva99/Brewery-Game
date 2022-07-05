@@ -53,10 +53,10 @@ updateRawMatQty <- function(beerReq, rawMatInfo, beerType) {
 
 ## Raw Material Ordering
 purchaseModal <- function() {
-  ModalDialog(
+  modalDialog(
     title="Purchase of Raw Materials",
     radioButtons("matChosen", "Choose an ingredient", choices=c("Malt", "Hops", "Yeast")),
-    numericInput("quantity", "Enter purchase quantity:", min=1),
+    numericInput("quantity", "Enter purchase quantity:", 0, min=0),
     htmlOutput("costOfPurchase"),
     footer=tagList(
       modalButton("Cancel"),

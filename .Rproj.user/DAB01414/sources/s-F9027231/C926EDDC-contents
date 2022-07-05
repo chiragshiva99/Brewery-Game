@@ -7,9 +7,9 @@
 #    http://shiny.rstudio.com/
 #
 
-library(ggplot2)
-library(shiny)
-library(shinyjs) 
+source("usePackages.R")
+pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","shinydashboard")
+loadPkgs(pkgnames)
 
 source("helper.R")
 
@@ -18,7 +18,8 @@ ui <- fluidPage(
 
     # Application title
     titlePanel("The Brewery Game"),
-
+    fluidRow(column(2,h3("Money"),
+             htmlOutput("money"), offset=1)),
     fluidRow(
       column(3, h3("Raw Materials"),
                htmlOutput("maltQty"),
@@ -59,9 +60,9 @@ server <- function(input, output) {
   tanks <-  as.data.frame(matrix(nrow=4, ncol=2))
   colnames(tanks) <- c("Beers", "Days")
   
-  rawMatOrders <-  as.data.frame(matrix(nrow=3, ncol=2))
-  colnames(rawMatOrders) <- c("Quantity", "Days")
-  rownames(rawMatOrders) <- c("Malt", "Hops", "Yeast")
+  rawMatOrder <-  as.data.frame(matrix(nrow=3, ncol=2))
+  colnames(rawMatOrder) <- c("Quantity", "Days")
+  rownames(rawMatOrder) <- c("Malt", "Hops", "Yeast")
   
   beerInv <-  c(Lager=10, IPA=20, Stout=30)
   
@@ -73,10 +74,17 @@ server <- function(input, output) {
   
   costInfo <- as.data.frame(matrix(rep(3, 6), nrow=3, ncol=2))
   colnames(costInfo) <- c("Fixed", "Variable")
-  rownams(costInfo) <- c("Malt", "Hops", "Yeast")
+  rownames(costInfo) <- c("Malt", "Hops", "Yeast")
+  
+  tankSize <- 10
+  fermentDays <- 3
+  orderComplete <- 2
   
   #Reactive Values
-  vals <- reactiveValues(tanks=tanks, beerInv=beerInv, rawMatOrders=rawMatOrders, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
+  vals <- reactiveValues(money=10000, tanks=tanks, beerInv=beerInv, rawMatOrder=rawMatOrder, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
+  
+  ## Money
+  output$money <- renderUI({paste("$", vals$money)})
   
   ## Advance Button
   
@@ -86,6 +94,16 @@ server <- function(input, output) {
     ## Increase the number of days for tanks and Order
     vals$tanks <- incrementDays(vals$tanks)
     vals$rawMatOrder <- incrementDays(vals$rawMatOrder)
+    completeTanks <- which(vals$tanks["Days"] >= fermentDays)
+    completeBeers <- c()
+    for (tank in completeTanks) {
+      completeBeers <- c(completeBeers, vals$tanks[tank, "Beers"])
+      vals$tanks[tank, ] <- NA
+    }
+    print(completeBeers)
+    for (beer in completeBeers) {
+      vals$beerInv[beer] <- vals$beerInv[beer] + tankSize
+    }
   })
   
   ## Tanks
@@ -121,7 +139,7 @@ server <- function(input, output) {
   ## Raw Material
   
   observeEvent(input$purchase, {
-    purchaseModal()
+    showModal(purchaseModal())
     print("Purchase")
   })
 
@@ -137,6 +155,8 @@ server <- function(input, output) {
   
   observeEvent(input$purchaseok, {
     vals$rawMatOrder <- addNewEntry(vals$rawMatOrder, vals$matChosen, vals$purchQty)
+    vals$money <- vals$money - calculateCost(costInfo, vals$matChosen, vals$purchQty)
+    removeModal()
   })
   
   ## Beer Inventory

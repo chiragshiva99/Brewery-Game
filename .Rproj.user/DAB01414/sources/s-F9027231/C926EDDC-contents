@@ -63,16 +63,27 @@ server <- function(input, output) {
   colnames(rawMatOrders) <- c("Quantity", "Days")
   rownames(rawMatOrders) <- c("Malt", "Hops", "Yeast")
   
-  beerInv <-  c(10, 20, 30)
+  beerInv <-  c(Lager=10, IPA=20, Stout=30)
   
-  rawMatQty <- c(30, 30, 30)
+  rawMatQty <- c(Malt=30, Hops=30, Yeast=30)
+  
+  beerReq <- as.data.frame(matrix(rep(3:1,3), nrow=3, ncol=3))
+  colnames(beerReq) <- c("Malt", "Hops", "Yeast")
+  rownames(beerReq) <- c("Lager", "IPA", "Stout")
+  
+  costInfo <- as.data.frame(matrix(rep(3, 6), nrow=3, ncol=2))
+  colnames(costInfo) <- c("Fixed", "Variable")
+  rownams(costInfo) <- c("Malt", "Hops", "Yeast")
+  
   #Reactive Values
-  vals <- reactiveValues(tanks=tanks, beerInv=beerInv, rawMatOrders=rawMatOrders, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL)
+  vals <- reactiveValues(tanks=tanks, beerInv=beerInv, rawMatOrders=rawMatOrders, rawMatQty=rawMatQty, tankSelect=NULL, beerChosen=NULL, purchQty=NULL, matChosen=NULL)
   
   ## Advance Button
   
   observeEvent(input$advance, {
     print("Advance")
+    
+    ## Increase the number of days for tanks and Order
     vals$tanks <- incrementDays(vals$tanks)
     vals$rawMatOrder <- incrementDays(vals$rawMatOrder)
   })
@@ -102,7 +113,8 @@ server <- function(input, output) {
   })
   
   observeEvent(input$makeBeer, {
-    vals$tanks <- addBeerToTank(vals$tanks, vals$tankSelect, vals$beerChosen)
+    vals$tanks <- addNewEntry(vals$tanks, vals$tankSelect, vals$beerChosen)
+    vals$rawMatQty <- updateRawMatQty(beerReq, vals$rawMatQty, vals$beerChosen)
     removeModal()
   })
   
@@ -112,14 +124,20 @@ server <- function(input, output) {
     purchaseModal()
     print("Purchase")
   })
-  
-  observeEvent(input$purchaseok, {
-    vals$rawMatOrders <- addOrder(vals$rawMatOrders)
-  })
 
   output$maltQty <- renderUI({paste0("Malts: ", vals$rawMatQty[1])})
   output$hopsQty <- renderUI({paste0("Hops: ", vals$rawMatQty[2])})
   output$yeastQty <- renderUI({paste0("Yeast: ", vals$rawMatQty[3])})
+  
+  ### Purchase of Raw Mat
+  observeEvent(input$quantity, {vals$purchQty <- input$quantity})
+  observeEvent(input$matChosen, {vals$matChosen <- input$matChosen})
+  
+  output$costOfPurchase <- renderUI({paste("Amount:", calculateCost(costInfo, vals$matChosen, vals$purchQty))})
+  
+  observeEvent(input$purchaseok, {
+    vals$rawMatOrder <- addNewEntry(vals$rawMatOrder, vals$matChosen, vals$purchQty)
+  })
   
   ## Beer Inventory
   

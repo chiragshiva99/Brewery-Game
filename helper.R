@@ -1,3 +1,11 @@
+## Both
+addNewEntry <- function(infoDF, row, value) {
+  infoDF[row, 1] <- value
+  infoDF[row, 2] <- 0
+  
+  infoDF
+}
+
 ## Beer Tanks
 tankStatus <- function(tankInfo, tankNo) {
   if (is.na(tankInfo[tankNo,1])) {
@@ -35,16 +43,33 @@ tankModal <- function(tankInfo, tankNo) {
   }
 }
 
-addBeerToTank <- function(tankInfo, tankNo, beerType) {
-  tankInfo[tankNo, 1] <- beerType
-  tankInfo[tankNo, 2] <- 0
-  
-  tankInfo
+updateRawMatQty <- function(beerReq, rawMatInfo, beerType) {
+  rawMat <- c("Malt", "Hops", "Yeast")
+  for (mat in rawMat) {
+    rawMatInfo[mat] <- rawMatInfo[mat] - beerReq[beerType, mat]
+  }
+  rawMatInfo
 }
 
 ## Raw Material Ordering
+purchaseModal <- function() {
+  ModalDialog(
+    title="Purchase of Raw Materials",
+    radioButtons("matChosen", "Choose an ingredient", choices=c("Malt", "Hops", "Yeast")),
+    numericInput("quantity", "Enter purchase quantity:", min=1),
+    htmlOutput("costOfPurchase"),
+    footer=tagList(
+      modalButton("Cancel"),
+      actionButton("purchaseok", "Make Purchase"))
+  )
+}
 
-
+calculateCost <- function(costInfo, mat, qty){
+  cost <- qty * costInfo[mat, "Variable"]
+  cost <- cost + costInfo[mat, "Fixed"]
+  
+  cost
+}
 
 ## Advance Button
 incrementDays <- function(frameInfo) {

@@ -11,7 +11,7 @@
 source("dbHelper.R")
 
 # Now, anywhere in your code where the password is needed you can get it using
-getOption("AWSPassword")
+# getOption("AWSPassword")
 # Otherwise it is hidden. So now this code can be shared with anyone 
 # without giving them access to your personal AWS database.
 

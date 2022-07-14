@@ -22,7 +22,7 @@ loadPkgs(pkgnames)
 source("helper.R")
 source("dbHelper.R")
 source("urlRouter.R")
-source("credentialHelper.R")
+source("credentialsHelper.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(

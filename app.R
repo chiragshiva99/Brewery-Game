@@ -15,14 +15,15 @@
 # without giving them access to your personal AWS database.
 
 source("usePackages.R")
-pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite")
+pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","shinydashboard", "shiny.router")
 loadPkgs(pkgnames)
 
 
 source("helper.R")
 source("dbHelper.R")
 source("userInterface.R")
-
+source("urlRouter.R")
+source("credentialsHelper.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(

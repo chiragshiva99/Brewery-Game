@@ -1,0 +1,12 @@
+tableID,name
+1,beerParameters
+2,materialNames
+3,stageNames
+4,beerReqParameters
+5,supplierParameters
+6,supplierNames
+7,demandParameters
+8,customerNames
+9,conditionParameters
+10,conditionExtra
+11,tableNames

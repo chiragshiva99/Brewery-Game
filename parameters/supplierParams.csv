@@ -1,0 +1,4 @@
+jobID,supplierID,materialID,fixedCost,variableCost,daysToComplete
+1,1,1,50,1,14
+2,2,2,20,20,14
+3,3,3,10,100,14

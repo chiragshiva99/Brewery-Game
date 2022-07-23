@@ -29,11 +29,104 @@ source("credentialsHelper.R")
 ui <- fluidPage(
     shinyjs::useShinyjs(),
     titlePanel("The Brewery Game"),
+    actionButton("register", "Register"),
+    actionButton("login", "Login"),
     gameInterface
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  # reactiveValues object for storing items like the user password
+  vals <- reactiveValues(password=NULL,userid=NULL,username=NULL,curGameid=-1)
+  
+  #when the user clicks the Register button
+  observeEvent(input$register, {
+    showModal(signupModal(failed1=FALSE, failed2 = FALSE))
+  })
+  #When user click the signupok button
+  observeEvent(input$signupok, {
+    #check if password1 exits and == password2
+    if (str_length(input$password1)>0 && (input$password1 == input$password2)){
+      #store the username and password and close the dialog
+      vals$username <- input$username
+      vals$password <- input$password1
+      print(vals$username)
+      #print(vals$password)
+      vals$username = registerUser(vals$username, vals$password)
+      
+      if (!is.null(vals$username)){
+        vals$userid <- getUserID(vals$username,vals$password)
+      }
+      print(vals$userid) # for debugging
+      removeModal()
+      
+    }
+    else {
+      #-----------ADD SOME CODE IF USERNAME ALREADY EXISTS-----------------
+      #if username already exists {
+      #showModal(signupModal(failed1= TRUE, failed2 = FALSE))
+      #}
+      
+      #if passwords dont match 
+      if (input$password1 != input$password2){
+        showModal(signupModal(failed1= FALSE, failed2 = TRUE))
+      }
+      else{
+        showModal(signupModal(failed1= TRUE, failed2 = TRUE))
+      }
+    }
+  })
+  
+  #when the user clicks the Login button
+  observeEvent(input$login, {
+    showModal(loginModal(failed=FALSE))
+  })
+  #when user clicks the login button
+  observeEvent(input$loginok, {
+    # Check that password1 exists and it matches password2
+    userid <- getUserID(input$username,input$password3)
+    if (userid>0) {
+      #store the playerid and playername and close the dialog
+      vals$userid <- userid
+      #print(vals$userid) # for debugging
+      vals$username <- input$username
+      #print(vals$username) # for debugging
+      removeModal()
+    } else {
+      showModal(loginModal(failed = TRUE))
+    }
+  })
+  
+  #when user clicks the changepw button  
+  observeEvent(input$changepw, {
+    showModal(changepwModal(failed1 = FALSE, failed2 = FALSE))
+  })
+  #when the user clicks the changepwok button
+  observeEvent(input$changepwok, {
+    # Get the playerID and check if it is valid
+    userid <- getUserID(input$username,input$password3)
+    userpassword <- getUserPassword(userid)
+    print(userpassword)
+    if ((userid>0) && (input$password3==userpassword) && str_length(input$password3) >0 && (input$password4 == input$password5) && (str_length(input$password4)>0)){
+      #store the playerid and playername and close the dialog
+      result <- updatePassword(input$username,input$password4)
+      removeModal()
+    } 
+    else {
+      #if failed 1 
+      #if user id doesn't exist{
+      #  showModal(changepwModal(failed1 = TRUE, failed2 = FALSE))
+      #}
+      #if failed 2
+      if ((input$password4 != input$password5) && (str_length(input$password4)>0)){
+        showModal(changepwModal(failed1 = FALSE, failed2 = TRUE))
+      }
+      else{
+        showModal(changepwModal(failed1 = TRUE, failed2 = TRUE))
+      }
+    }
+  })
+  
   
   ## Initializing stuff
   condition <- 1

@@ -1,46 +1,15 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-# At the beginning of any R session, record your AWS database password:
-
-# Now, anywhere in your code where the password is needed you can get it using
-# getOption("AWSPassword")
-# Otherwise it is hidden. So now this code can be shared with anyone 
-# without giving them access to your personal AWS database.
-
-source("usePackages.R")
-pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","shinydashboard", "shinyauthr", "DT", "sodium")
-loadPkgs(pkgnames)
-
-
-source("helper.R")
-source("dbHelper.R")
-source("userInterface.R")
-
-
-# Define UI for application that draws a histogram
-ui <- dashboardPage(header, sidebar, body, skin = "blue")
-# ui <- fluidPage(
-#     shinyjs::useShinyjs(),
-#     
-# )
-
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
   ### LOGIN STUFF ###   From: https://www.listendata.com/2019/06/how-to-add-login-page-in-shiny-r.html
   
-  login <- FALSE
-  gameStart <- F
-  finish <- F
-  hasGame <- T
-  USER <- reactiveValues(login = login, gameStart = gameStart, finish=finish, hasGame=hasGame)
+  loginInit <- FALSE
+  gameStartInit <- F
+  finishInit <- F
+  hasGameInit <- F
+  prevGameInit <- -1
+  signupInit <- F
+  USER <- reactiveValues(login = loginInit, gameStart = gameStartInit, finish=finishInit, hasGame=hasGameInit, prevGame=prevGameInit, signup=signupInit)
   
   observe({ 
     if (USER$login == FALSE) {
@@ -48,11 +17,18 @@ server <- function(input, output) {
         if (input$login > 0) {
           Username <- isolate(input$userName)
           Password <- isolate(input$password)
-          if(length(which(credentials$username_id==Username))==1) { 
-            pasmatch  <- credentials["password"][which(credentials$username_id==Username),]
+          credentials <- getCredentials(Username)
+          if(length(which(credentials$username==Username))==1) { 
+            pasmatch  <- credentials["password"][which(credentials$username==Username),]
             pasverify <- password_verify(pasmatch, Password)
             if(pasverify) {
               USER$login <- TRUE
+              hasGame <- credentials["curGameID"][which(credentials$username==Username),]
+              prevGame <- credentials["prevGameID"][which(credentials$username==Username),]
+              if(hasGame != -1) {
+                USER$hasGame <- T
+                USER$prevGame <- prevGame
+              }
             } else {
               shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade")
               shinyjs::delay(3000, shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade"))
@@ -93,24 +69,37 @@ server <- function(input, output) {
         menuItem("Main Page", tabName = "dashboard", icon = icon("dashboard"))
         
       )
-    } else if (USER$login == T & USER$finish == T & USER$finish == T) {
+    } else if (USER$login == T & USER$gameStart == T & USER$finish == T) {
       sidebarMenu(
-        menuItem("Main Page", tabName = "dashboard", icon = icon("dashboard")),
-        menuItem("Analysis Page", tabName = "analysis", icon = icon("dashboard"))
+        menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard")),
+        menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
       )
     }
   })
   
   output$body <- renderUI({
     if (USER$login == T & USER$gameStart == T) {
-      gameInterface
+      if (USER$finish == F) {
+        tabItems(
+          gameInterface
+        )
+      } else {
+        tabItems(
+          gameInterface,
+          analysisInterface
+        )
+      }
     }
     else if (USER$login == T & USER$gameStart == F & USER$finish == F) {
       gameChoice
     }
+    else if (USER$signup == T) {
+      signuppage
+    } 
     else {
       loginpage
     }
+    
   })
   
   #### GAME STUFF ####
@@ -144,7 +133,7 @@ server <- function(input, output) {
   costInfo <- getMaterialCost()
   
   startingMoney <- 100000
-
+  
   
   totalDays <- 10
   
@@ -200,13 +189,15 @@ server <- function(input, output) {
   })
   
   ## Info params
-  output$money <- renderUI({paste("$", vals$money)})
-  output$day <- renderUI({vals$day})
+  output$money <- renderUI({h4(paste("Cash Balance: $", vals$money))})
+  output$day <- renderUI({
+    h4(paste("Days:", vals$day))
+  })
   output$lostSales <- renderUI({paste(vals$lostCust, "Customers Lost")})
   
   output$lostSalesPerBeer <- renderTable({
     select(vals$lostPerBeer, -stockOut)
-    })
+  })
   ## Advance Button
   
   observeEvent(input$advance, {
@@ -216,13 +207,13 @@ server <- function(input, output) {
     vals$tanks$DaysInTank <- vals$tanks$DaysInTank + 1
     vals$rawMatOrder$Days <- vals$rawMatOrder$Days + 1
     vals$demand$Day <- vals$demand$Day + 1
-
+    
     ## Add completed Beers
     completeTanks <- which(vals$tanks$DaysInTank >= vals$tanks$daysToComplete)
     for (tank in completeTanks) {
       beerIdx <- which(vals$beerInv["name"] == vals$tanks[tank, "Beer"])
       vals$beerInv[beerIdx, "qty"] <- vals$beerInv[beerIdx, "qty"] + vals$tanks[tank, "tankSize"]
-
+      
       vals$tanks[tank, "Beer"] <- "Empty"
       vals$tanks[tank, "DaysInTank"] <- NA
       vals$tanks[tank, "daysToComplete"] <- NA
@@ -253,7 +244,7 @@ server <- function(input, output) {
           vals$money <- vals$money + qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customers[which((customers$beerName == beerType) & (customers$customerName == customerName)), "revenueExtra"])
           removeDemand <- c(removeDemand, row)
         }
-
+        
         # Unsatisfied?
         dayWait <- vals$demand[row, "Day"]
         maxWait <- vals$demand[row, "maxWait"]
@@ -269,15 +260,15 @@ server <- function(input, output) {
         }
       }
     }
-
+    
     if (!vector.is.empty(removeDemand)){
       vals$demand <- vals$demand[-c(removeDemand),]
     }
-
+    
     if (length(unsatisDemand) > 0) {
       vals$lostCust <- vals$lostCust + length(unsatisDemand)
     }
-
+    
     # Add New Demand
     newDemand <- subset(totalDemand, Day==vals$day)
     if (nrow(newDemand) > 0) {
@@ -291,9 +282,9 @@ server <- function(input, output) {
       shinyjs::disable("brew")
       shinyjs::disable("purchase")
       shinyjs::disable("advance")
-
+      
     }
-  
+    
   })
   
   output$gameStatus <- renderUI({
@@ -338,7 +329,7 @@ server <- function(input, output) {
   observeEvent(input$tankSelect, {
     vals$tankSelect <- input$tankSelect
   })
-
+  
   ## Raw Material
   
   observeEvent(input$purchase, {
@@ -385,9 +376,9 @@ server <- function(input, output) {
     } else {
       text <- "Not Enough Money to purchase!"
     }
-   text 
-   })
-
+    text 
+  })
+  
   output$rawMatQty <- renderTable({
     click <- input$advance + input$makeBeer
     vals$rawMatQty
@@ -413,9 +404,6 @@ server <- function(input, output) {
   ## Demand
   output$custDemand <- renderTable({
     click <- input$advance
-    select(vals$demand, -maxWait)
+    select(vals$demand, -maxWait, -actualDay)
   })
 }
-
-# Run the application 
-shinyApp(ui = ui, server = server)

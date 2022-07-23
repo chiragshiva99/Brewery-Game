@@ -99,3 +99,15 @@ killDbConnections <- function () {
   print(paste(length(all_cons), " connections killed."))
   
 }
+
+
+credentials <- data.frame(
+  userID=c(1),
+  username = c("G"),
+  password   = sapply(c("mypass"),sodium::password_store),
+  prevGameID = c(-1),
+  curGameID = c(-1),
+  stringsAsFactors = F
+)
+
+addToTable("userInfo", credentials)

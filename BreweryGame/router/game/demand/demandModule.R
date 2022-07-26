@@ -15,7 +15,7 @@ demandModuleUI <- function(id) {
   )
 }
 
-demandModuleServer <- function(id, demand) {
+demandModuleServer <- function(id, demand, disable=F) {
   moduleServer(
     id,
     function(input, output, session) {

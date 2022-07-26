@@ -21,14 +21,3 @@ incrementDays <- function(frameInfo, col) {
 }
 
 
-## Reset
-resetDialog <- function() {
-  modalDialog(
-    title="Reset?",
-    div("Are you sure you want to reset?"),
-    footer=tagList(
-      modalButton("Cancel"),
-      actionButton("resetok", "Reset")
-    )
-  )
-}

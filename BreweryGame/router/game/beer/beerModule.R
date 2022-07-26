@@ -1,4 +1,4 @@
-source("beerHelper.R")
+source("router/game/beer/beerHelper.R")
 
 brewModal <- function(session, tankOptions, beerOptions) {
   ns <- session$ns
@@ -29,7 +29,7 @@ beerModuleUI <- function(id) {
   )
 }
 
-beerModuleServer <- function(id, beer, material, session) {
+beerModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -58,6 +58,18 @@ beerModuleServer <- function(id, beer, material, session) {
         material$rawMatQty <- updateRawMatQty(beerReq, material$rawMatQty, input$beerChosen)
         removeModal()
       })
+      
+      observeEvent(disabled(), {
+        print("USER inner scope")
+        print(disabled)
+        if(disabled()) {
+          shinyjs::disable("brew")
+        } else {
+          shinyjs::enable("brew")
+        }
+      })
+      
     }
+   
   )
 }

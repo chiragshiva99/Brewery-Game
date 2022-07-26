@@ -128,3 +128,28 @@ createNewPlayerQuery <- function(conn,playername,password){
   querytemplate <- "INSERT INTO LeaderPlayer (playername,password) VALUES (?id1,?id2);"
   query<- sqlInterpolate(conn, querytemplate,id1=playername,id2=password)
 }
+
+updateDayState <- function(dayStateData, gameID, userID) {
+  day <- dayStateData[1,"day"]
+  jsonString <- toJSON(dayStateData)
+  
+  #open the connection
+  conn <- getAWSConnection()
+  querytemplate <- "INSERT INTO stateTrack (gameID, userID, gameDay, state) VALUES (?id1, ?id2, ?id3, ?id4);"
+  query <- sqlInterpolate(conn, querytemplate,id1=gameID,id2=userID, id3=day, id4=jsonString)
+  print(query) #for debug
+  tryCatch(
+    {  # This is not a SELECT query so we use dbExecute
+      result <- dbExecute(conn,query)
+      print("State Saved")
+      success <- TRUE
+    }, error=function(cond){print("publishState: ERROR")
+      print(cond)
+    }, 
+    warning=function(cond){print("publishState: WARNING")
+      print(cond)},
+    finally = {}
+  )
+  
+  dbDisconnect(conn)
+}

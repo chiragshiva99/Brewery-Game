@@ -1,4 +1,4 @@
-source("materialHelper.R")
+source("router/game/material/materialHelper.R")
 
 purchaseModal <- function(session, materialOptions) {
   ns <- session$ns
@@ -45,7 +45,7 @@ materialModuleUI <- function(id) {
   
 }
 
-materialModuleServer <- function(id, material, general, costInfo) {
+materialModuleServer <- function(id, material, general, costInfo, disabled=F) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -103,7 +103,16 @@ materialModuleServer <- function(id, material, general, costInfo) {
       output$currentOrders <- renderTable({
         click <- input$purchaseok + input$advance
         select(material$rawMatOrder, -daysToComplete)
-        
+      })
+      
+      observeEvent(disabled(), {
+        print("USER inner scope")
+        print(disabled)
+        if(disabled()) {
+          shinyjs::disable("purchase")
+        } else {
+          shinyjs::enable("purchase")
+        }
       })
     }
   )

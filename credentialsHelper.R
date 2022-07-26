@@ -80,6 +80,15 @@ getUserID <- function(username, password) {
   userid #return the userid
 }
 
+getUserUsername <- function(conn, userid) {
+  #Given a connection, call the table 'userInfo' and return the resulting name
+  querytemplate <- "SELECT username FROM userInfo where userID = ?id1;"
+  result <- dbGetQuery(conn,querytemplate, id1=userid)
+  username <- result$username[1]
+  playername
+}
+
+
 UserPasswordQuery <- function(conn, userid) {
   querytemplate <- "SELECT password FROM userInfo where userID = ?id1;"
   query <- sqlInterpolate(conn, querytemplate, id1=userid)
@@ -97,7 +106,7 @@ getUserPassword <- function(userid){
 createNewUserQuery <- function(conn,username,password){
   #password could contain an SQL insertion attack
   #Create a template for the query with placeholder for  password
-  querytemplate <- "INSERT INTO userInfo (username,password, curGameID) VALUES (?id1,?id2, -1);" #HELP ME CHECK IF THIS LOOKS CORRECT
+  querytemplate <- "INSERT INTO userInfo (username,password) VALUES (?id1,?id2);" #HELP ME CHECK IF THIS LOOKS CORRECT
   query <- sqlInterpolate(conn, querytemplate,id1=username,id2=password)
 }  
 
@@ -116,11 +125,35 @@ updatePassword <- function(username,password){
 registerUser <- function(username, password){
   #open the connection
   conn <- getAWSConnection()
+  #username <- getUserUsername(conn, userid)
   query <- createNewUserQuery(conn, username, password)
   print(query) #for debug
   
   #CHECK SUCCESS WHILE LOOP
   
+  # This query could fail to run properly so we wrap it in a loop with tryCatch()
+  success <- FALSE
+  iter <- 0
+  MAXITER <- 5
+  while(!success & iter < MAXITER){
+    iter <- iter+1
+    tryCatch(
+      
+      {  # This is not a SELECT query so we use dbExecute
+        result <- dbExecute(conn,query)
+        print(result)
+        success <- TRUE
+      }, error=function(cond){print("registerPlayer: ERROR")
+        print(cond)
+        # The query failed, likely because of a duplicate playername
+        #playername <- getRandomPlayerName(conn)
+        query <- createNewUserQuery(conn,username,password) }, 
+      warning=function(cond){print("registerUser: WARNING")
+        print(cond)},
+      finally = {print(paste0("Iteration ",iter," done."))
+      }
+    )
+  } # end while loop
   
   
   #REGISTERING USER 

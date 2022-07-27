@@ -1,12 +1,9 @@
 source("router/game/gameModule.R")
 source("router/analysis/analysisModule.R")
+source("router/login/loginModule.R")
 
-source("router/analysisPage.R")
-source("router/loginPage.R")
 source("router/gameChoicePage.R")
-
-# source("game/helper.R")
-# source("game/dbHelper.R")
+source("router/routerDBHelper.R")
 
 routerModuleUI <- function(id) {
   ns <- NS(id)
@@ -23,55 +20,26 @@ routerModuleServer <- function(id) {
     function(input, output, session) {
       ### LOGIN STUFF ###   From: https://www.listendata.com/2019/06/how-to-add-login-page-in-shiny-r.html
       ns <- session$ns 
-      loginInit <- T
-      gameStartInit <- T
-      finishInit <- F
-      hasGameInit <- F
-      prevGameInit <- -1
-      signupInit <- F
-      id=1
-      gameID=1
-      USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, hasGame=hasGameInit, prevGame=prevGameInit, signup=signupInit)
       
-      observe({ 
-        if (USER$login == FALSE) {
-          if (!is.null(input$login)) {
-            if (input$login > 0) {
-              Username <- isolate(input$userName)
-              Password <- isolate(input$password)
-              credentials <- getCredentials(Username)
-              if(length(which(credentials$username==Username))==1) { 
-                pasmatch  <- credentials["password"][which(credentials$username==Username),]
-                pasverify <- password_verify(pasmatch, Password)
-                if(pasverify) {
-                  USER$login <- TRUE
-                  hasGame <- credentials["curGameID"][which(credentials$username==Username),]
-                  if(hasGame != -1) {
-                    USER$hasGame <- T
-                    USER$prevGame <- prevGame
-                  }
-                } else {
-                  shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade")
-                  shinyjs::delay(3000, shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade"))
-                }
-              } else {
-                shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade")
-                shinyjs::delay(3000, shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade"))
-              }
-            } 
-          }
-        }    
-      })
+      USER <- loginModuleServer("login")
       
       observeEvent(input$startGame, {
-        if(USER$gameStart == F) {
-          print(USER$gameStart)
           USER$gameStart <-  T
-        }
+          ### Assign User a gameID
+          result <- createGame(USER$id)
+          if(is.null(result)) {
+            print("ERROR in creation")
+          } else {
+            USER$gameID <- result
+          }
+          
+          ### Assign as current GameID in database
+          result <- updateGameID(USER$id, USER$gameID)
       })
       
       output$continueOption <- renderUI({
-        if(USER$hasGame == T) {
+        print(paste("gameID, when continue?", USER$gameID))
+        if(USER$gameID != -1) {
           actionButton(ns("continueGame"), "Continue Game")
         }
       })
@@ -89,15 +57,15 @@ routerModuleServer <- function(id) {
         sidebarMenuItems <- list()
         
         if(USER$login == T) {
-          sidebarMenuItems <- list(sidebarMenuItems, menuItem("User Info", tabName = "userInfo", icon=icon("dashboard")))
+          sidebarMenuItems <- append(sidebarMenuItems, menuItem("User Info", tabName = "userInfo", icon=icon("dashboard")))
         }
         
         if (USER$gameStart == T) {
-          sidebarMenuItems <- list(sidebarMenuItems, menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard")))
+          sidebarMenuItems <- append(sidebarMenuItems, menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard")))
         }
         
         if (USER$finish == T | USER$finish == F) {
-          sidebarMenuItems <- list(sidebarMenuItems, menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard")))
+          sidebarMenuItems <- append(sidebarMenuItems, menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard")))
         }
         
         print(sidebarMenuItems)
@@ -114,11 +82,8 @@ routerModuleServer <- function(id) {
         else if (USER$login == T & USER$gameStart == F & USER$finish == F) {
           gameChoice(ns)
         }
-        else if (USER$signup == T) {
-          signuppage(ns)
-        }
         else {
-          loginpage(ns)
+          loginModuleUI(ns("login"))
         }
       })
         

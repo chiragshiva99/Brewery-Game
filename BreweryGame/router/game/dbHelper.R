@@ -118,28 +118,6 @@ getCustomerData <- function(){
   result
 }
 
-getCredentials <- function(username) {
-  #open the connection
-  conn <- getAWSConnection()
-  #password could contain an SQL insertion attack
-  #Create a template for the query with placeholders for playername and password
-  querytemplate <- "SELECT * FROM userInfo WHERE username=?id1;"
-  query<- sqlInterpolate(conn, querytemplate,id1=username)
-  print(query) #for debug
-  result <- dbGetQuery(conn,query)
-  print(result)
-  # If the query is successful, result should be a dataframe with one row else return NA
-  if (nrow(result)!=1){
-    result <- data.frame(userID=0, username=NA, password=NA, prevGameID=NA, curGameID=NA)
-  } 
-  print(result)
-  
-  #Close the connection
-  dbDisconnect(conn)
-  result
-  
-}
-
 createNewPlayerQuery <- function(conn,playername,password){
   #password could contain an SQL insertion attack
   #Create a template for the query with placeholder for  password

@@ -368,6 +368,10 @@ gameModuleServer <- function(id, USER) {
         # End game if User is finished
         if (general$day > endDays) {
           USER$finish <- T
+          USER$gameID <- -1
+          
+          ### update end of game
+          result <- updateGameID(USER$id, USER$gameID)
         }
         
         

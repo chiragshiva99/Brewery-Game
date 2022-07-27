@@ -26,7 +26,7 @@ demandModuleServer <- function(id, demand, disable=F) {
       })
       
       output$custDemand <- renderTable({
-        select(demand$dayDemand, -maxWait, -actualDay)
+        select(demand$dayDemand, -maxWait, -arrivalDay)
       })
     }
   )

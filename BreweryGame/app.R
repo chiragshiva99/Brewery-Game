@@ -18,8 +18,6 @@ source("usePackages.R")
 pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","shinydashboard", "shinyauthr", "DT", "sodium", "shinyBS", "plotly")
 loadPkgs(pkgnames)
 
-#UIs
-
 
 #feature Modules
 source("router/routerModule.R")

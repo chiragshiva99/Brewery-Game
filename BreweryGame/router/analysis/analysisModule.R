@@ -10,19 +10,19 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Lost Customers",
-        "Includes all lost customers and by beer also"
+        plotlyOutput(ns("customerPlot"))
       ),
       box(
         title="Beer inventory levels",
-        "Tracks all beer inventory, in tank and outside"
+        plotlyOutput(ns("beerPlot"))
       ),
       box(
         title="Beer Demand",
-        "Shows beer Demand over entire game"
+        plotlyOutput(ns("demandPlot"))
       ),
       box(
         title="Material inventory Levels",
-        "All material inventory, in delivery and on hand"
+        plotlyOutput(ns("materialPlot"))
       )
       
     )
@@ -34,8 +34,8 @@ analysisModuleServer <- function(id, stateData) {
     id,
     function(input, output, session) {
       output$moneyPlot <- renderPlotly({
-        print(stateData$state)
-        p <- ggplot(stateData$state, aes(day, cash)) + 
+        print(stateData$cash)
+        p <- ggplot(stateData$cash, aes(gameDay, cashBalance)) + 
               geom_line()
         
         ggplotly(p)

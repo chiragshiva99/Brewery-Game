@@ -54,20 +54,18 @@ gameModuleServer <- function(id, USER) {
       rawMat <- c("Malt", "Hops", "Yeast")
       
       tankSize <- 100
-      tanks <-  as.data.frame(matrix(nrow=4, ncol=5))
-      colnames(tanks) <- c("Tank", "Beer", "DaysInTank", "daysToComplete", "tankSize")
-      for (i in 1:nrow(tanks)){
-        tanks[i, "Tank"] <- i
-        tanks$Beer <- "Empty"
-        tanks$tankSize <- tankSize
-      }
+      tanks <-  getTankDF(4, tankSize)
       
-      rawMatOrder <-  data.frame(matrix(nrow=0, ncol=5))
+      rawMatOrder <- data.frame(matrix(nrow=0, ncol=5))
       colnames(rawMatOrder) <- c("Material", "Quantity", "Days", "Supplier", "daysToComplete")
       
       beerInv <-  getStartQty(1, "beerParameters")
       
       beerInfo <- getBeerInfo()
+      
+      materialInfo <- getMaterialInfo()
+      
+      customerInfo <- getCustomerInfo()
       
       rawMatQty <- getStartQty(1, "materialNames")
       
@@ -87,23 +85,20 @@ gameModuleServer <- function(id, USER) {
       customers <- getCustomerData()
       
       totalDemand <- generateTotalDemand(customers, totalDays)
-      dayDemand <- subset(totalDemand, Day==1)
-      if (nrow(dayDemand) > 0){
-        dayDemand$Day <- 0
-      }
-      
+      dayDemand <- subset(totalDemand, arrivalDay==1)
+
       ## Lost Sales Tracking
-      lostPerBeer <- data.frame(matrix(nrow=nrow(beerInfo), ncol=2))
-      colnames(lostPerBeer) <- c("name", "lostQty")
-      lostPerBeer$stockOut <- beerInfo$stockOut
-      lostPerBeer$name <- beerInfo$name
-      lostPerBeer$lostQty <- 0
+      lostPerBeer <- getLostSalesDF(beerInfo)
       
       ## State Tracking
-      emptyStateData <- createStateDataFrame(beerInfo, rawMatQty, tanks)
+      cashState <- createCashStateDF()
+      beerState <- createBeerStateDF()
+      matState <- createMatStateDF()
+      demandState <- createDemandStateDF()
+      tankState <- createTankStateDF()
       
       # Initialize whole gameStateData
-      gameStateData <- reactiveValues(state=emptyStateData)
+      gameStateData <- reactiveValues(beer=beerState, cash=cashState, mat=matState, demand=demandState, tank=tankState)
       
       # Reactive Values
       general <- reactiveValues(money=startingMoney, day=initDay)
@@ -128,10 +123,7 @@ gameModuleServer <- function(id, USER) {
         shinyjs::enable("advance")
         
         totalDemand <- generateTotalDemand(customers, totalDays)
-        dayDemand <- subset(totalDemand, Day==1)
-        if (nrow(dayDemand) > 0){
-          dayDemand$day <- 0
-        }
+        dayDemand <- subset(totalDemand, arrivalDay==1)
         
         general$money <- startingMoney
         general$day <- 1
@@ -150,27 +142,192 @@ gameModuleServer <- function(id, USER) {
       output$day <- renderUI({
         h4(paste("Days:", general$day))
       })
+      
       ## Advance Button
       observeEvent(input$advance, {
-        print(gameStateData$state)
-        # Initialize dayStateDataFrame
-        dayStateData <- list()
-        dayStateData$day <- general$day
-        for (tank in beer$tanks[, "Tank"]) {
-          dayStateData[paste0("tank",as.character(tank))] <- beer$tanks[tank, "Beer"]
+
+        lostBeerOrders <- getLostBeerList(beerInfo)
+        
+        dayDemandDF <- createDemandStateDF()
+        
+        ## Satisfy and unsatisfied Demand
+        removeDemand <- c()
+        unsatisDemand <- c()
+        revenue <- 0
+        lostRev <- 0
+        if (nrow(demand$dayDemand) > 0) {
+          for (row in 1:nrow(demand$dayDemand)) {
+            # Satisfied?
+            demandData <- list()
+            addToDB <- F
+            
+            beerType <- demand$dayDemand[row, "Beer"]
+            beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
+            customerName <- demand$dayDemand[row, "Customer"]
+            qty <- demand$dayDemand[row, "Quantity"]
+            beerIdx <- which(beer$beerInv$name == beerType)
+            if (beer$beerInv[beerIdx,"qty"] >= qty) {
+              addToDB <- T
+              beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
+              beerRevenue <- qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customers[which((customers$beerName == beerType) & (customers$customerName == customerName)), "revenueExtra"])
+              
+              general$money <- general$money + beerRevenue
+              
+              revenue <- revenue + beerRevenue
+              
+              removeDemand <- c(removeDemand, row)
+              
+              demandData$serviceDay <- general$day
+            }
+            
+            # Unsatisfied?
+            dayWait <- demand$dayDemand[row, "Day"]
+            maxWait <- demand$dayDemand[row, "maxWait"]
+            lostIdx <- which(demand$lostPerBeer$name == beerType)
+
+            if (dayWait > maxWait) {
+              addToDB <- T
+              unsatisDemand <- c(unsatisDemand, row)
+              demand$lostPerBeer[lostIdx, "lostQty"] <- demand$lostPerBeer[lostIdx, "lostQty"] + qty
+              beerLostRev <- qty*demand$lostPerBeer[lostIdx, "stockOut"]
+              general$money <- general$money - beerLostRev
+              lostRev <- lostRev + beerLostRev
+              
+              lostBeerOrders[[beerID]] <- lostBeerOrders[[beerID]] + qty
+              
+              removeDemand <- c(removeDemand, row)
+              demandData$serviceDay <- -1
+            }
+            
+            ## Add to dayDemandDF
+            if(addToDB) {
+              demandData$gameDay <- general$day
+              demandData$beerID <- beerID
+              demandData$customerID <- customerInfo[which(customerInfo$name == customerName), "customerID"]
+              demandData$quantity <- qty
+              demandData$arrivalDay <- demand$dayDemand[row, "arrivalDay"]
+              
+              dayDemandDF <- rbind(dayDemandDF, demandData)
+            }
+          }
         }
+        
+        
+        ## Add demand Data to DB if necessary
+        if(nrow(dayDemandDF) > 0) {
+          dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayDemandDF)),dayDemandDF)
+          addToTable("demandTrack", dayDemandDF)
+        }
+        
+        if (!vector.is.empty(removeDemand)){
+          demand$dayDemand <- demand$dayDemand[-c(removeDemand),]
+        }
+        
+        if (length(unsatisDemand) > 0) {
+          demand$lostCust <- demand$lostCust + length(unsatisDemand)
+        }
+        
+        
+        #### END OF DAY n ####
+        # if(general$day <= endDays) {
+        #   updateStatesToDB()
+        # }
+        day <- general$day
+        
+        ## UPDATE STATES TO DATABASE
+        
+        dayCashDF <- createCashStateDF()
+        dayBeerDF <- createBeerStateDF()
+        dayTankDF <- createTankStateDF()
+        dayMatDF <- createMatStateDF()
+        
+        # Store Cash Statuses
+        data <- list()
+        data$gameDay <- day
+        data$cashBalance <- general$money
+        data$revenue <- revenue
+        data$lostRev <- lostRev
+        
+        dayCashDF <- rbind(dayCashDF, data)
+        dayCashDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayCashDF)), dayCashDF)
+        
+        addToTable("cashTrack", dayCashDF)
+        
+        # Store Tank Levels
+        
+        for (tank in beer$tanks[, "Tank"]) {
+          data <- list()
+          data$gameDay <- day
+          
+          data$tankID <- tank
+          data$beerID <- beerInfo[which(beerInfo$name == beer$tanks[tank, "Beer"]), "beerID"]
+          data$tankSize <- beer$tanks[tank, "tankSize"]
+          data$completed <- (beer$tanks[tank, "DaysInTank"] > beer$tanks[tank, "daysToComplete"])
+          
+          if (!identical(data$beerID,integer(0))) {
+            dayTankDF <- rbind(dayTankDF, data)
+          }
+        }
+        print(dayTankDF)
+        if(nrow(dayTankDF) > 0) {
+          dayTankDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayTankDF)), dayTankDF)
+          print(dayTankDF)
+          addToTable("tankTrack", dayTankDF)
+        }
+
         
         #Store inventory levels of Beer
-        for (drink in beerInv[, "name"]) {
-          #Track the amount in each Tank
-          dayStateData[paste0("tank", drink)] <- sum(beer$tanks[which(beer$tanks$Beer == drink), "tankSize"])
-          dayStateData[paste0("lost", drink)] <- 0
-        }
         
-        for (mat in rawMatQty[,"name"]) {
-          dayStateData[paste0("inv", mat)] <- material$rawMatQty[which(material$rawMatQty$name == mat), "qty"]
-          dayStateData[paste0("order", mat)] <- sum(material$rawMatOrder[which(material$rawMatOrder$Material == mat), "Quantity"])
+        for (drink in beerInv[, "name"]) {
+          data <- list()
+          data$gameDay <- day
+          
+          beerID <- beerInfo[which(beerInfo$name == drink), "beerID"]
+          
+          data$beerID <- beerID
+          
+          data$inventory <- beer$beerInv[which(beer$beerInv$name == drink), "qty"]
+          
+          data$inTank <- sum(beer$tanks[which(beer$tanks$Beer == drink), "tankSize"])
+          
+          data$lostSale <- lostBeerOrders[[beerID]]
+          
+          dayBeerDF <- rbind(dayBeerDF, data)
+          
         }
+        dayBeerDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayBeerDF)), dayBeerDF)
+        addToTable("beerTrack", dayBeerDF)
+        
+        # Store Material Data
+        for (mat in rawMatQty[,"name"]) {
+          data <- list()
+          
+          data$gameDay <- day
+          
+          materialID <- materialInfo[which(materialInfo$name == mat), "materialID"]
+          data$materialID <- materialID
+          
+          data$inventory <- material$rawMatQty[which(material$rawMatQty$name == mat), "qty"]
+          
+          data$inTransit <- sum(material$rawMatOrder[which(material$rawMatOrder$Material==mat), "Quantity"])
+          
+          dayMatDF <- rbind(dayMatDF, data)
+        }
+        dayMatDF <- dayMatDF[,colnames(createMatStateDF())]
+        dayMatDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayMatDF)), dayMatDF)
+        addToTable("materialTrack", dayMatDF)
+        
+        ## Add all to gameStateData
+        gameStateData$beer <- addToGameState(gameStateData$beer, dayBeerDF)
+        gameStateData$mat <- addToGameState(gameStateData$mat, dayMatDF)
+        gameStateData$demand <- addToGameState(gameStateData$demand, dayDemandDF)
+        gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
+        gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
+        
+
+        #### START OF DAY n+1 ####
+        
+        
         ## Advance game as required
         
         general$day <- general$day + 1
@@ -179,6 +336,13 @@ gameModuleServer <- function(id, USER) {
         beer$tanks$DaysInTank <- beer$tanks$DaysInTank + 1
         material$rawMatOrder$Days <- material$rawMatOrder$Days + 1
         demand$dayDemand$Day <- demand$dayDemand$Day + 1
+        
+        # Add New Demand
+        newDemand <- subset(totalDemand, arrivalDay==general$day)
+        if (nrow(newDemand) > 0) {
+          demand$dayDemand <- rbind(demand$dayDemand, newDemand)
+        }
+        
         
         ## Add completed Beers
         completeTanks <- which(beer$tanks$DaysInTank >= beer$tanks$daysToComplete)
@@ -201,86 +365,12 @@ gameModuleServer <- function(id, USER) {
           material$rawMatOrder <- material$rawMatOrder[-c(completeOrders),]
         }
         
-        ## Satisfy and unsatisfied Demand
-        removeDemand <- c()
-        unsatisDemand <- c()
-        revenue <- 0
-        lostRev <- 0
-        if (nrow(demand$dayDemand) > 0) {
-          for (row in 1:nrow(demand$dayDemand)) {
-            # Satisfied?
-            beerType <- demand$dayDemand[row, "Beer"]
-            customerName <- demand$dayDemand[row, "Customer"]
-            qty <- demand$dayDemand[row, "Quantity"]
-            beerIdx <- which(beer$beerInv$name == beerType)
-            if (beer$beerInv[beerIdx,"qty"] >= qty) {
-              beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
-              beerRevenue <- qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customers[which((customers$beerName == beerType) & (customers$customerName == customerName)), "revenueExtra"])
-              
-              general$money <- general$money + beerRevenue
-              
-              revenue <- revenue + beerRevenue
-              
-              removeDemand <- c(removeDemand, row)
-            }
-            
-            # Unsatisfied?
-            dayWait <- demand$dayDemand[row, "Day"]
-            maxWait <- demand$dayDemand[row, "maxWait"]
-            lostIdx <- which(demand$lostPerBeer$name == beerType)
-
-            if (dayWait >= maxWait) {
-              unsatisDemand <- c(unsatisDemand, row)
-              demand$lostPerBeer[lostIdx, "lostQty"] <- demand$lostPerBeer[lostIdx, "lostQty"] + qty
-              beerLostRev <- qty*demand$lostPerBeer[lostIdx, "stockOut"]
-              general$money <- general$money - beerLostRev
-              lostRev <- lostRev + beerLostRev
-              
-              dayStateData[paste0("lost",beerType)] <- dayStateData[paste0("lost",beerType)] + qty
-              
-              removeDemand <- c(removeDemand, row)
-            }
-          }
-        }
-        
-        if (!vector.is.empty(removeDemand)){
-          demand$dayDemand <- demand$dayDemand[-c(removeDemand),]
-        }
-        
-        if (length(unsatisDemand) > 0) {
-          demand$lostCust <- demand$lostCust + length(unsatisDemand)
-        }
-        
-        # Add New Demand
-        newDemand <- subset(totalDemand, Day==general$day)
-        if (nrow(newDemand) > 0) {
-          newDemand$Day <-  0
-          demand$dayDemand <- rbind(demand$dayDemand, newDemand)
-        }
-        
         # End game if User is finished
         if (general$day > endDays) {
           USER$finish <- T
         }
         
-        #Record User State and Store in DataFrame
-        if (general$day <= endDays + 1) {
-          dayStateData$cash <- general$money
-          dayStateData$revenue <- revenue
-          dayStateData$lostRev <- lostRev
-          
-          for (beer in beerInv[, "name"]) {
-            # Track the amount in inventory
-            dayStateData[paste0("inv", beer)] <- beerInv[which(beerInv$name == beer), "qty"]
-          }
-          dayStateData <- rbind(emptyStateData, dayStateData)
-          dayStateData <- dayStateData[,colnames(emptyStateData)]
-          gameStateData$state <- rbind(gameStateData$state, dayStateData)
-          
-          
-          ## Update Game State to DB
-          # updateDayState(dayStateData, USER$gameID, USER$id)
-        }
+        
         
       })
       

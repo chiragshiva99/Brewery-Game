@@ -20,4 +20,34 @@ incrementDays <- function(frameInfo, col) {
   frameInfo
 }
 
+### Init helper functions ###
 
+getTankDF <- function(tankNo, tankSize) {
+  tanks <- as.data.frame(matrix(nrow=tankNo, ncol=5))
+  colnames(tanks) <- c("Tank", "Beer", "DaysInTank", "daysToComplete", "tankSize")
+  for (i in 1:nrow(tanks)){
+    tanks[i, "Tank"] <- i
+    tanks$Beer <- "Empty"
+    tanks$tankSize <- tankSize
+  }
+  tanks
+}
+
+getLostSalesDF <- function(beerInfo) {
+  lostPerBeer <- data.frame(matrix(nrow=nrow(beerInfo), ncol=2))
+  colnames(lostPerBeer) <- c("name", "lostQty")
+  lostPerBeer$stockOut <- beerInfo$stockOut
+  lostPerBeer$name <- beerInfo$name
+  lostPerBeer$lostQty <- 0
+  
+  lostPerBeer
+}
+
+getLostBeerList <- function(beerInfo) {
+  lostBeer <- list()
+  for (drink in beerInfo[, "beerID"]) {
+    lostBeer[[drink]] <- 0
+  }
+  
+  lostBeer
+}

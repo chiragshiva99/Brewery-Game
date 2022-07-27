@@ -82,11 +82,29 @@ getMaterialCost <- function(){
 
 getBeerInfo <- function(){
   conn <- getAWSConnection()
-  query <- "SELECT name, revenue, daysToComplete, stockOut FROM beerParameters"
+  query <- "SELECT beerID, name, revenue, daysToComplete, stockOut FROM beerParameters"
   result <- dbGetQuery(conn,query)
   #result should return a single row
   print(result)
   dbDisconnect(conn)
+  result
+}
+
+getMaterialInfo <- function() {
+  conn <- getAWSConnection()
+  query <- "SELECT materialID, name FROM materialNames"
+  result <- dbGetQuery(conn, query)
+  dbDisconnect(conn)
+  
+  result
+}
+
+getCustomerInfo <- function() {
+  conn <- getAWSConnection()
+  query <- "SELECT customerID, name FROM customerNames"
+  result <- dbGetQuery(conn, query)
+  dbDisconnect(conn)
+  
   result
 }
 

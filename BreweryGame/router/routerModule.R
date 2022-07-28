@@ -8,11 +8,52 @@ source("router/routerDBHelper.R")
 
 routerModuleUI <- function(id) {
   ns <- NS(id)
-  dashboardPage(
-    dashboardHeader( title = "Brewery Game", uiOutput(ns("logoutbtn"))), 
-    dashboardSidebar(collapsed=TRUE, uiOutput(ns("sidebarpanel"))), 
-    dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body"))), 
-    skin = "blue")
+  fluidPage(
+    dashboardPage(
+      title = "The Brewery Game Dashboard",
+      fullscreen = TRUE,
+      
+      header = dashboardHeader(
+        title = dashboardBrand(
+          title = "The Brewery Game",
+          color = "primary",
+          href = "www",
+          image = "BeerBoys.jpg",
+        ),
+        skin = "light",
+        status = "white",
+        border = TRUE,
+        sidebarIcon = icon("bars"),
+        controlbarIcon = icon("th"),
+        fixed = FALSE,
+        leftUi = tagList(
+          dropdownMenu(
+            badgeStatus = "info",
+            type = "notifications",
+            notificationItem(
+              inputId = "triggerAction2",
+              text = "Error!",
+              status = "danger"
+            )
+          )
+        ),
+        uiOutput(ns("logoutbtn"))
+      ),
+      sidebar = dashboardSidebar(
+        collapsed=TRUE, 
+        skin = "light",
+        status = "primary",
+        elevation = 3,
+        sidebarUserPanel(
+          name = "Save Water, Drink Beer!"
+        ),
+        uiOutput(ns("sidebarpanel"))
+      ),
+      #controlbar = dashboardControlbar(),
+      footer =  dashboardFooter(),
+      body = dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body")))
+    )
+    )
 }
 
 routerModuleServer <- function(id) {

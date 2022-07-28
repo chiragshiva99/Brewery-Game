@@ -1,6 +1,7 @@
 source("router/game/gameModule.R")
 source("router/analysis/analysisModule.R")
 source("router/login/loginModule.R")
+source("router/userInfo/userInfoModule.R")
 
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
@@ -24,6 +25,12 @@ routerModuleServer <- function(id) {
       USER <- loginModuleServer("login")
       
       observeEvent(input$startGame, {
+          
+          ## Delete previous Game activity if it is in progress
+          if(USER$gameID != -1) {
+            result <- deletePrevGame(USER$id, USER$gameID)
+          }
+          
           USER$gameStart <-  T
           ### Assign User a gameID
           result <- createGame(USER$id)
@@ -55,17 +62,20 @@ routerModuleServer <- function(id) {
       
       output$sidebarpanel <- renderUI({
         sidebarMenuItems <- list()
-        
+        counter <- 0
         if(USER$login == T) {
-          sidebarMenuItems <- append(sidebarMenuItems, menuItem("User Info", tabName = "userInfo", icon=icon("dashboard")))
+          counter <- counter + 1
+          sidebarMenuItems[[counter]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("dashboard"))
         }
         
         if (USER$gameStart == T) {
-          sidebarMenuItems <- append(sidebarMenuItems, menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard")))
+          counter <- counter + 1
+          sidebarMenuItems[[counter]] <- menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard"))
         }
         
         if (USER$finish == T | USER$finish == F) {
-          sidebarMenuItems <- append(sidebarMenuItems, menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard")))
+          counter <- counter + 1
+          sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
         }
         
         print(sidebarMenuItems)
@@ -75,6 +85,7 @@ routerModuleServer <- function(id) {
       output$body <- renderUI({
         if (USER$login == T & USER$gameStart == T) {
           tabItems(
+            userInfoModuleUI(ns("user")),
             gameModuleUI(ns("game")),
             analysisModuleUI(ns("analysis"))
           )
@@ -87,7 +98,8 @@ routerModuleServer <- function(id) {
         }
       })
         
-        
+      #### UserInfo Page ####
+      userInfoModuleServer("game")
       
       #### GAME STUFF ####
       stateData <- gameModuleServer("game", USER)

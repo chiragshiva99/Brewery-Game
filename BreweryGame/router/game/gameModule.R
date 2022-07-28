@@ -2,7 +2,7 @@ source("router/game/material/materialModule.R")
 source("router/game/beer/beerModule.R")
 source("router/game/demand/demandModule.R")
 
-source("router/game/dbHelper.R")
+source("router/game/gameDBHelper.R")
 source("router/game/helper.R")
 source("router/game/demandHelper.R")
 source("router/game/stateHelper.R")

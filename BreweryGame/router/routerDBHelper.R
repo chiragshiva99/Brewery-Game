@@ -60,3 +60,7 @@ updateGameID <- function(userID, gameID) {
   
   result
 }
+
+deletePrevGame <- function(userID, gameID) {
+  tables <- c("beerTrack", "materialTrack", "cashTrack", "demandTrack", "tankTrack", "gameTrack")
+}

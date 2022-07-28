@@ -1,5 +1,3 @@
-source("router/game/dbHelper.R")
-
 analysisModuleUI <- function(id) {
   ns <- NS(id)
   tabItem(

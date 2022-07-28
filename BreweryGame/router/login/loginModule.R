@@ -1,3 +1,5 @@
+source("router/login/loginDBHelper.R")
+
 loginModuleUI <- function(id) {
   ns <- NS(id)
   uiOutput(ns("page"))

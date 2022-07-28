@@ -60,8 +60,6 @@ beerModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled) {
       })
       
       observeEvent(disabled(), {
-        print("USER inner scope")
-        print(disabled)
         if(disabled()) {
           shinyjs::disable("brew")
         } else {

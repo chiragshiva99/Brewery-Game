@@ -97,9 +97,55 @@ updateDayState <- function(dayStateData, gameID, userID) {
       print(cond)
     }, 
     warning=function(cond){print("publishState: WARNING")
-      print(cond)},
-    finally = {}
+      print(cond)}
   )
   
   dbDisconnect(conn)
+}
+
+updateSeed <- function(userID, gameID, seed) {
+  conn <- getAWSConnection()
+  queryTemplate <- "UPDATE gameTrack SET gameSeed=?id3 WHERE userID=?id1 AND gameID=?id2"
+  query <- sqlInterpolate(conn, queryTemplate, id1=userID, id2=gameID, id3=seed)
+  
+  success <- F
+  tryCatch(
+    {  # This is not a SELECT query so we use dbExecute
+      result <- dbExecute(conn,query)
+      print("Seed Saved")
+      success <- TRUE
+    }, error=function(cond){print("updateSeed: ERROR")
+      print(cond)
+    }, 
+    warning=function(cond){print("updateSeed: WARNING")
+      print(cond)}
+  )
+  
+  dbDisconnect(conn)
+  
+  return(success)
+}
+
+updateCashBalance <- function(userID, gameID, cashBalance) {
+  conn <- getAWSConnection()
+  
+  queryTemplate <- "UPDATE gameTrack SET cashBalance=?id3 WHERE userID=?id1 AND gameID=?id2"
+  query <- sqlInterpolate(conn, queryTemplate, id1=userID, id2=gameID, id3=cashBalance)
+  
+  success <- F
+  tryCatch(
+    {  # This is not a SELECT query so we use dbExecute
+      result <- dbExecute(conn,query)
+      print("final cash balance Saved")
+      success <- TRUE
+    }, error=function(cond){print("updateCashBalance: ERROR")
+      print(cond)
+    }, 
+    warning=function(cond){print("updateCashBalance: WARNING")
+      print(cond)}
+  )
+  
+  dbDisconnect(conn)
+  
+  return(success)
 }

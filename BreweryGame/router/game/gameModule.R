@@ -84,9 +84,12 @@ gameModuleServer <- function(id, USER) {
       ## Demand Generation
       customers <- getCustomerData()
       
+      seed <- sample(1:2^15, 1)
+      set.seed(seed)
+      
       totalDemand <- generateTotalDemand(customers, totalDays)
       dayDemand <- subset(totalDemand, arrivalDay==1)
-
+      
       ## Lost Sales Tracking
       lostPerBeer <- getLostSalesDF(beerInfo)
       
@@ -122,6 +125,9 @@ gameModuleServer <- function(id, USER) {
         shinyjs::enable("purchase")
         shinyjs::enable("advance")
         
+        seed <- sample(1:2^15, 1)
+        set.seed(seed)
+        
         totalDemand <- generateTotalDemand(customers, totalDays)
         dayDemand <- subset(totalDemand, arrivalDay==1)
         
@@ -134,6 +140,16 @@ gameModuleServer <- function(id, USER) {
         beer$beerInv <- beerInv
         material$rawMatOrder <- rawMatOrder
         material$rawMatQty <- rawMatQty
+        
+        result <- createGame(USER$id)
+        if(is.null(result)) {
+          print("ERROR in creation")
+        } else {
+          USER$gameID <- result
+        }
+        
+        ### Assign as current GameID in database
+        result <- updateGameID(USER$id, USER$gameID)
       })
       
       ## Info params
@@ -145,7 +161,19 @@ gameModuleServer <- function(id, USER) {
       
       ## Advance Button
       observeEvent(input$advance, {
-
+        # ### If user just started playing the game
+        # # Store Demand Data
+        # if(general$day == 1) {
+        #   storeAllDemand(totalDemand)
+        #   print("store all demand")
+        # }
+        
+        if(general$day == 1) {
+          print(seed)
+          updateSeed(USER$id, USER$gameID, seed)
+        }
+        
+        
         lostBeerOrders <- getLostBeerList(beerInfo)
         
         dayDemandDF <- createDemandStateDF()
@@ -217,6 +245,11 @@ gameModuleServer <- function(id, USER) {
         if(nrow(dayDemandDF) > 0) {
           dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayDemandDF)),dayDemandDF)
           addToTable("demandTrack", dayDemandDF)
+        }
+        
+        ## Update the demand of system
+        if(nrow(demand$dayDemand) > 0) {
+          print(paste("updating demand for day", general$day))
         }
         
         if (!vector.is.empty(removeDemand)){
@@ -324,6 +357,9 @@ gameModuleServer <- function(id, USER) {
         gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
         gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
         
+        if(general$day == endDays) {
+          updateCashBalance(USER$id, USER$gameID, general$money)
+        }
 
         #### START OF DAY n+1 ####
         
@@ -372,6 +408,7 @@ gameModuleServer <- function(id, USER) {
           
           ### update end of game
           result <- updateGameID(USER$id, USER$gameID)
+          
         }
         
         
@@ -399,8 +436,6 @@ gameModuleServer <- function(id, USER) {
       ## Tanks and Beers
       disabled <- reactive(USER$finish)
       observeEvent(USER$finish, {
-        print("USER outer scope")
-        print(USER$finish)
         disabled <- USER$finish
       })
       beerModuleServer("beer", beer, material, beerInfo, beerReq, disabled)

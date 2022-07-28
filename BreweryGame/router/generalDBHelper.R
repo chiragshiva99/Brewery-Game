@@ -32,14 +32,49 @@ addToTable <- function(table,dfin){
         success <- TRUE
       }, error=function(cond){print("update: ERROR")
         print(cond)
-        break
       }, 
       warning=function(cond){print("update: WARNING")
         print(cond)
-        break
       },
       finally = {}
     )
   }
   dbDisconnect(conn)
+}
+
+deleteFromTable <- function(table, param) {
+  conn <- getAWSConnection()
+  
+  if(length(param) == 0) {
+    print("no parameters passed to delte")
+    return(F)
+  }
+  
+  conditions <- names(param)
+  query <- paste0("DELETE FROM ", table, " WHERE")
+  
+  conditions <- c()
+  for (p in names(param)) {
+    conditions <- c(conditions, paste0(p, "=", param[[p]]))
+  }
+  
+  query <- paste(query, paste(conditions, collapse=" AND "), ";")
+  
+  success <- F
+  tryCatch(
+    {  # This is not a SELECT query so we use dbExecute
+      result <- dbExecute(conn,query)
+      print(paste("deleteFrom" ,table, ": SUCCESS"))
+      success <- TRUE
+    }, error=function(cond){print("deleteFromTable: ERROR")
+      print(cond)
+    }, 
+    warning=function(cond){print("deleteFromTable: WARNING")
+      print(cond)
+    }
+  )
+  
+  dbDisconnect(conn)
+  
+  return(success)
 }

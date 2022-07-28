@@ -61,6 +61,18 @@ updateGameID <- function(userID, gameID) {
   result
 }
 
-deletePrevGame <- function(userID, gameID) {
+deleteGame <- function(userID, gameID, range=c(1:length(tables))) {
   tables <- c("beerTrack", "materialTrack", "cashTrack", "demandTrack", "tankTrack", "gameTrack")
+  results <- c()
+  for (table in tables[range]) {
+    res <- deleteFromTable(table, list(userID=userID, gameID=gameID))
+    results <- c(results, res)
+  }
+  
+  if(all(results==T)) {
+    print("all deleted")
+    return(T)
+  } else {
+    return(F)
+  }
 }

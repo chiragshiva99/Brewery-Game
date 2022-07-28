@@ -51,3 +51,8 @@ getLostBeerList <- function(beerInfo) {
   
   lostBeer
 }
+
+storeAllDemand <- function(totalDemand) {
+  addToTable("", totalDemand)
+  
+}

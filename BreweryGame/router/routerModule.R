@@ -28,7 +28,7 @@ routerModuleServer <- function(id) {
           
           ## Delete previous Game activity if it is in progress
           if(USER$gameID != -1) {
-            result <- deletePrevGame(USER$id, USER$gameID)
+            result <- deleteGame(USER$id, USER$gameID)
           }
           
           USER$gameStart <-  T
@@ -44,12 +44,22 @@ routerModuleServer <- function(id) {
           result <- updateGameID(USER$id, USER$gameID)
       })
       
-      output$continueOption <- renderUI({
-        print(paste("gameID, when continue?", USER$gameID))
-        if(USER$gameID != -1) {
-          actionButton(ns("continueGame"), "Continue Game")
-        }
-      })
+      #### Temporarily scrapped since letting user restore previous game is kind of troublesome to implement
+      # output$continueOption <- renderUI({
+      #   # print(paste("previous gameID", USER$gameID))
+      #   # if(USER$gameID != -1) {
+      #   #   actionButton(ns("continueGame"), "Continue Game")
+      #   # }
+      # })
+      
+      # observeEvent(input$continueGame, {
+      #   ### Load Old Game State Data
+      #   prevStateData <- loadPrevState(USER$id, USER$gameID)
+      #   ### pass it to gameModule
+      #   
+      #   ### set user start game
+      #   USER$gameStart <- T
+      # })
       
       output$logoutbtn <- renderUI({
         req(USER$login)
@@ -73,7 +83,7 @@ routerModuleServer <- function(id) {
           sidebarMenuItems[[counter]] <- menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard"))
         }
         
-        if (USER$finish == T | USER$finish == F) {
+        if ((USER$finish == T | USER$finish == F) & USER$gameStart == T) {
           counter <- counter + 1
           sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
         }
@@ -99,7 +109,7 @@ routerModuleServer <- function(id) {
       })
         
       #### UserInfo Page ####
-      userInfoModuleServer("game")
+      userInfoModuleServer("user", USER)
       
       #### GAME STUFF ####
       stateData <- gameModuleServer("game", USER)

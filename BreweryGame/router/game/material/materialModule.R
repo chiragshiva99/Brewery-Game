@@ -101,10 +101,16 @@ materialModuleServer <- function(id, material, general, costInfo, disabled=F) {
         lapply(1:nrow(material$rawMatQty), function(i) {
           output[[paste0('mat', i)]] <- renderUI({
             matName <- material$rawMatQty[i, "name"]
-            fluidRow(
-              tags$img(height="20%", width="20%", src=paste0(matName, ".png")),
-              tags$p(paste(matName, material$rawMatQty[i, "qty"]))
+            customValueBox(
+              material$rawMatQty[i, "qty"],
+              matName,
+              icon=customIcon(list(src=paste0(matName, '.png'), width="80px"), lib="local"),
+              width=12
             )
+            # fluidRow(
+            #   tags$img(height="20%", width="20%", src=paste0(matName, ".png")),
+            #   tags$p(paste(matName, material$rawMatQty[i, "qty"]))
+            # )
           })
         }) 
       )

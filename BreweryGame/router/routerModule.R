@@ -12,6 +12,7 @@ routerModuleUI <- function(id) {
     dashboardPage(
       title = "The Brewery Game Dashboard",
       fullscreen = TRUE,
+      dark=TRUE,
       
       header = dashboardHeader(
         title = dashboardBrand(
@@ -26,18 +27,18 @@ routerModuleUI <- function(id) {
         sidebarIcon = icon("bars"),
         controlbarIcon = icon("th"),
         fixed = FALSE,
-        leftUi = tagList(
-          dropdownMenu(
-            badgeStatus = "info",
-            type = "notifications",
-            notificationItem(
-              inputId = "triggerAction2",
-              text = "Error!",
-              status = "danger"
-            )
-          )
-        ),
-        uiOutput(ns("logoutbtn"))
+        # leftUi = tagList(
+        #   dropdownMenu(
+        #     badgeStatus = "info",
+        #     type = "notifications",
+        #     notificationItem(
+        #       inputId = "triggerAction2",
+        #       text = "Error!",
+        #       status = "danger"
+        #     )
+        #   )
+        # ),
+        rightUi = userOutput(ns("userDropdown"))
       ),
       sidebar = dashboardSidebar(
         collapsed=TRUE, 
@@ -49,7 +50,15 @@ routerModuleUI <- function(id) {
         ),
         uiOutput(ns("sidebarpanel"))
       ),
-      #controlbar = dashboardControlbar(),
+      controlbar = dashboardControlbar(
+        id = NULL,
+        disable = FALSE,
+        width = 250,
+        collapsed = TRUE,
+        overlay = TRUE,
+        skin = "dark",
+        pinned = NULL
+      ),
       footer =  dashboardFooter(),
       body = dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body")))
     )
@@ -102,6 +111,23 @@ routerModuleServer <- function(id) {
       #   USER$gameStart <- T
       # })
       
+      output$userDropdown <- renderUser({
+        req(USER$login)
+        dashboardUser(
+          name = "Divad Nojnarg",
+          image = "https://adminlte.io/themes/AdminLTE/dist/img/user2-160x160.jpg",
+          title = "shinydashboardPlus",
+          subtitle = "Author",
+          footer = p("The footer", class = "text-center"),
+          fluidRow(
+            dashboardUserItem(
+              width=18,
+              uiOutput(ns("logoutbtn"))
+            )
+          )
+        )
+      })
+      
       output$logoutbtn <- renderUI({
         req(USER$login)
         tags$li(a(icon("fa fa-sign-out"), "Logout", 
@@ -130,7 +156,7 @@ routerModuleServer <- function(id) {
         }
         
         print(sidebarMenuItems)
-        return(sidebarMenu(.list=sidebarMenuItems))
+        return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       
       output$body <- renderUI({
@@ -148,12 +174,17 @@ routerModuleServer <- function(id) {
           loginModuleUI(ns("login"))
         }
       })
+      
+      observe({
+        print(USER$selectedTab)
+        updateTabItems(inputId = "tabs", selected=USER$selectedTab)
+      })
         
       #### UserInfo Page ####
       userInfoModuleServer("user", USER)
       
       #### GAME STUFF ####
-      stateData <- gameModuleServer("game", USER)
+      c(USER, stateData) %<-%  gameModuleServer("game", USER)
       
       #### ANALYSIS ####
       analysisModuleServer("analysis", stateData)

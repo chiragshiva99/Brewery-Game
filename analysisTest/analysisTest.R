@@ -1,7 +1,6 @@
 library(ggplot2)
 library(vistime)
-source("../analysisTest/addParametersToDB.R")
-
+source("addParametersToDB.R")
 
 getFromTrackTable <- function(table, userID, gameID) {
   conn <- getAWSConnection()
@@ -74,3 +73,37 @@ newTank[c(9,11,14,17), "beerID"] <- 4
 
 newVis <- createVisTank(newTank)
 vistime(newVis)
+
+
+#data from demandTrack
+
+getFromdemandTrackTable <- function(table, userID, gameID, beerID) {
+  conn <- getAWSConnection()
+  
+  queryTemplate <- paste("SELECT * FROM",table,"WHERE userID=?id2 AND gameID=?id3 AND beerID=?id4;")
+  query <- sqlInterpolate(conn, queryTemplate, id2=userID, id3=gameID, id4=beerID )
+  
+  result <- dbGetQuery(conn, query)
+  
+  dbDisconnect(conn)
+  
+  return(result)
+}
+
+demand <- getFromTrackTable("demandTrack", 1, 20)
+demandBeer1 <- getFromdemandTrackTable("demandTrack", 1, 20, 1)
+demandBeer2 <- getFromdemandTrackTable("demandTrack", 1, 20, 2)
+demandBeer3 <- getFromdemandTrackTable("demandTrack", 1, 20, 3)
+
+ggplot(mapping=aes(gameDay, quantity)) +
+  geom_line(data=demandBeer1, color="red", size= 1) +
+  geom_line(data=demandBeer2, color="green", size= 1) +
+  geom_line(data=demandBeer3, color="blue", size= 1) +
+  geom_point(data=demand, size=3) 
+
+#create function to set other days to 0
+  
+  
+
+
+

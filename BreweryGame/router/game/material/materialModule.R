@@ -36,7 +36,7 @@ materialModuleUI <- function(id) {
            style="material-flat",
            color="warning"
          ),
-         infoBoxOutput(ns("matInv"), width=12),
+         uiOutput(ns("matInv")),
          box(
            width=NULL,
            title="Material Orders",
@@ -91,14 +91,33 @@ materialModuleServer <- function(id, material, general, costInfo, disabled=F) {
         text 
       })
       
-      output$matInv <- renderInfoBox({
-        infoBox(
-          title="Raw Material Inventory",
-          value=htmlOutput(ns("rawMatQty")),
-          icon=tags$i(class="fa-solid fa-beer-mug-empty"),
-          iconElevation=1
-        )
+      output$matInv <- renderUI({
+        lapply(1:nrow(material$rawMatQty), function(i) {
+          uiOutput(ns(paste0('mat',i)))
+        })
       })
+      
+      observe(
+        lapply(1:nrow(material$rawMatQty), function(i) {
+          output[[paste0('mat', i)]] <- renderUI({
+            matName <- material$rawMatQty[i, "name"]
+            fluidRow(
+              tags$img(height="20%", width="20%", src=paste0(matName, ".png")),
+              tags$p(paste(matName, material$rawMatQty[i, "qty"]))
+            )
+          })
+        }) 
+      )
+      
+      
+      # output$matInv <- renderInfoBox({
+      #   infoBox(
+      #     title="Raw Material Inventory",
+      #     value=htmlOutput(ns("rawMatQty")),
+      #     icon=tags$i(class="fa-solid fa-beer-mug-empty"),
+      #     iconElevation=1
+      #   )
+      # })
       
       output$rawMatQty <- renderTable({
         material$rawMatQty %>% rename(Material=name, Quantity=qty)

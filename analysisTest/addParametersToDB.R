@@ -6,7 +6,7 @@ library("data.table")
 source("usePackages.R")
 pkgnames <- c("DBI", "tidyverse", "RMySQL")
 loadPkgs(pkgnames)
-source("dbHelper.R")
+#source("dbHelper.R")
 
 getAWSConnection <- function(){
   conn <- dbConnect(

@@ -19,22 +19,40 @@ resetDialog <- function(session) {
   )
 }
 
+endGameModal <- function(session) {
+  ns <- session$ns
+  modalDialog(
+    title="End of Game",
+    div("The game has ended!"),
+    footer=tagList(
+      actionButton(ns("resetok"), "Play Again!"),
+      actionButton(ns("gotoAnalysis"), "Analyse Performance")
+    )
+  )
+}
+
 
 gameModuleUI <- function(id, disabled=F) {
   ns <- NS(id)
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            box(width=3,
-                actionButton(ns("reset"), "Reset Game"),
+            column(width=3,
+                actionBttn(
+                  inputId=ns("reset"), 
+                  label="Reset Game",
+                  style="minimal",
+                  color="default"),
                 htmlOutput(ns("gameStatus"))
             ),
-            box(width=3,
-                htmlOutput(ns("money"))),
-            box(width=3,
-                htmlOutput(ns("day"))),
-            box(width=3,
-                actionButton(ns("advance"), "Advance: Next Day")
+            bs4ValueBoxOutput(ns("money"), width=3),
+            bs4ValueBoxOutput(ns("day"), width=3),
+            column(width=3,
+                actionBttn(
+                  inputId=ns("advance"), 
+                  label="Advance: Next Day",
+                  style="jelly",
+                  color="danger")
             )
           ),
           fluidRow(
@@ -152,11 +170,29 @@ gameModuleServer <- function(id, USER) {
         result <- updateGameID(USER$id, USER$gameID)
       })
       
+      observeEvent(input$gotoAnalysis,{
+        removeModal()
+        USER$selectedTab <- "analysisTab"
+      })
       ## Info params
-      output$money <- renderUI({h4(paste("Cash Balance: $", general$money))})
+      output$money <- renderbs4ValueBox({
+        bs4ValueBox(
+          paste("$", general$money), 
+          "Cash Balance",
+          icon=icon("dollar-sign"),
+          color="success",
+          gradient=T
+        )
+      })
       
-      output$day <- renderUI({
-        h4(paste("Days:", general$day))
+      output$day <- renderbs4ValueBox({
+        bs4ValueBox(
+          general$day, 
+          "Day",
+          icon=icon("calendar"),
+          color="info",
+          gradient=T
+        )
       })
       
       ## Advance Button
@@ -359,6 +395,7 @@ gameModuleServer <- function(id, USER) {
         
         if(general$day == endDays) {
           updateCashBalance(USER$id, USER$gameID, general$money)
+          showModal(endGameModal(session))
         }
 
         #### START OF DAY n+1 ####
@@ -446,7 +483,7 @@ gameModuleServer <- function(id, USER) {
       ## Demand
       demandModuleServer("demand", demand, disabled)
       
-      return(gameStateData)
+      return(list(USER, gameStateData))
     }
   )
 }

@@ -30,15 +30,16 @@ supplierModal <- function(session, supplierOptions, matChosen) {
 materialModuleUI <- function(id) {
   ns <- NS(id)
   column(width=4,
-         box(
-           width=NULL,
-           title="Raw Materials", 
-           htmlOutput(ns("rawMatQty"))
+         actionBttn(
+           inputId=ns("purchase"),
+           label="Purchase",
+           style="material-flat",
+           color="warning"
          ),
+         infoBoxOutput(ns("matInv"), width=12),
          box(
            width=NULL,
            title="Material Orders",
-           actionButton(ns("purchase"), "Purchase"),
            htmlOutput(ns("currentOrders"))
          )
   )
@@ -49,6 +50,7 @@ materialModuleServer <- function(id, material, general, costInfo, disabled=F) {
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
       observeEvent(input$purchase, {
         removeModal()
         showModal(purchaseModal(session, unique(costInfo[,"materialName"])))
@@ -89,8 +91,17 @@ materialModuleServer <- function(id, material, general, costInfo, disabled=F) {
         text 
       })
       
+      output$matInv <- renderInfoBox({
+        infoBox(
+          title="Raw Material Inventory",
+          value=htmlOutput(ns("rawMatQty")),
+          icon=tags$i(class="fa-solid fa-beer-mug-empty"),
+          iconElevation=1
+        )
+      })
+      
       output$rawMatQty <- renderTable({
-        material$rawMatQty
+        material$rawMatQty %>% rename(Material=name, Quantity=qty)
       })
       
       observeEvent(input$purchaseok, {

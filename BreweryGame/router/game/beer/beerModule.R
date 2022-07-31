@@ -18,12 +18,15 @@ brewModal <- function(session, tankOptions, beerOptions) {
 beerModuleUI <- function(id) {
   ns <- NS(id)
   column(width=4,
-         box(width=NULL,
-             title="Beer Inventory",
-             htmlOutput(ns("beerQty"))),
+         actionBttn(
+           inputId=ns("brew"),
+           label="Brew",
+           style="material-flat",
+           color="warning"
+         ),
+         infoBoxOutput(ns("beerInv"), width=12),
          box(width=NULL,
              title="Brewery Tanks",
-             actionButton(ns("brew"), "Brew"),
              htmlOutput(ns("tankInfo"))
          )
   )
@@ -33,6 +36,15 @@ beerModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled) {
   moduleServer(
     id,
     function(input, output, session) {
+      output$beerInv <- renderInfoBox({
+        infoBox(
+          title="Beer Inventory",
+          value=renderTable({beer$beerInv %>% rename(Beer=name, Quantity=qty)}),
+          icon=tags$i(class="fa-solid fa-beer-mug-empty"),
+          iconElevation=1
+        )
+
+      })
       output$beerQty <- renderTable({beer$beerInv})
       
       output$tankInfo <- renderTable({select(beer$tanks, -daysToComplete, -tankSize)})

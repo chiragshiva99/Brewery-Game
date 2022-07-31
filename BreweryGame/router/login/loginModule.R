@@ -77,7 +77,7 @@ loginModuleServer <- function(id, USER) {
       signupInit <- F
       id=1
       gameID=-1
-      USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, signup=signupInit)
+      USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, signup=signupInit, selectedTab = NULL)
       
       observe({ 
         if (USER$login == FALSE) {

@@ -15,9 +15,7 @@ getFromTrackTable <- function(table, userID, gameID) {
   return(result)
 }
 
-tank <- getFromTrackTable("demandTrack", 1, 14)
 tank <- getFromTrackTable("tankTrack", 1, 18)
-
 tank
 
 ggplot(tank, aes(gameDay, tankID)) + 

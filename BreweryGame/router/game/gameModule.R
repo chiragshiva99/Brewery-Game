@@ -13,6 +13,7 @@ source("router/game/actionModule.R")
 ### Action SubModules
 source("router/game/material/matPurchaseModule.R")
 source("router/game/beer/beerBrewModule.R")
+source("router/game/beer/beerStoreModule.R")
 
 ## Progress Module
 source("router/game/progressModule.R")
@@ -333,9 +334,6 @@ gameModuleServer <- function(id, USER) {
         if (nrow(newDemand) > 0) {
           demand$dayDemand <- rbind(demand$dayDemand, newDemand)
         }
-        
-        ## Add completed Beers
-        beer <- completeBeerInTank(beer)
         
         ## Add completed Raw Material Orders
         material <- completeMaterialOrder(material)

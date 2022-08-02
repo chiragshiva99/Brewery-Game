@@ -13,9 +13,6 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
 
         actionTabs <- list()
 
-        print(actionTabs)
-        print("actions")
-
         actionTabs[[1]] <- tabPanel(
           title="Purchase Material",
           matPurchaseModuleUI(ns("material"), unique(costInfo[,"materialName"]))
@@ -25,13 +22,18 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
           title="Brew Beer",
           beerBrewModuleUI(ns("beer"), beer$tanks[,"Tank"], beer$beerInv[, "name"])
         )
+        
+        actionTabs[[3]] <- tabPanel(
+          title="Store Beer",
+          beerStoreModuleUI(ns("beerStore"))
+        )
 
-        print(actionTabs)
         return(tabBox(title="Actions", id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
       })
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled)
       beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
+      beerStoreModuleServer("beerStore", beer, material)
     }
   )
 }

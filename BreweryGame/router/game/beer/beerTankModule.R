@@ -1,7 +1,7 @@
 beerTankModuleUI <- function(id) {
   ns <- NS(id)
   div(
-    uiOutput(ns("tank"))
+    htmlOutput(ns("tank"))
   )
 }
 

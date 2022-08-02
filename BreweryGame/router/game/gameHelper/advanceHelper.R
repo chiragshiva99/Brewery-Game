@@ -86,7 +86,7 @@ generateTankDataToStore <- function(day, beer, beerInfo) {
     data$tankID <- tank
     data$beerID <- beerInfo[which(beerInfo$name == beer$tanks[tank, "Beer"]), "beerID"]
     data$tankSize <- beer$tanks[tank, "tankSize"]
-    data$completed <- (beer$tanks[tank, "DaysInTank"] > beer$tanks[tank, "daysToComplete"])
+    data$completed <- as.integer(beer$tanks[tank, "DaysInTank"] >= beer$tanks[tank, "daysToComplete"])
     
     if (!identical(data$beerID,integer(0))) {
       dayTankDF <- rbind(dayTankDF, data)

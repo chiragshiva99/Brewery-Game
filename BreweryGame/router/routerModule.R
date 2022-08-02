@@ -6,6 +6,8 @@ source("router/userInfo/userInfoModule.R")
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
 
+
+
 routerModuleUI <- function(id) {
   ns <- NS(id)
   fluidPage(
@@ -61,6 +63,7 @@ routerModuleUI <- function(id) {
       ),
       footer =  dashboardFooter(),
       body = dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body")))
+                           
     )
     )
 }
@@ -155,7 +158,6 @@ routerModuleServer <- function(id) {
           sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
         }
         
-        print(sidebarMenuItems)
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       
@@ -177,7 +179,7 @@ routerModuleServer <- function(id) {
       
       observe({
         print(USER$selectedTab)
-        updateTabItems(inputId = "tabs", selected=USER$selectedTab)
+        updateTabItems(inputId="tabs", selected=USER$selectedTab)
       })
         
       #### UserInfo Page ####

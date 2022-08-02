@@ -1,7 +1,28 @@
-source("router/game/material/materialModule.R")
-source("router/game/beer/beerModule.R")
-source("router/game/demand/demandModule.R")
+## Customer Modules
+source("router/game/demand/customerLostModule.R")
+source("router/game/demand/customerDemandModule.R")
 
+## Inventory Module
+source("router/game/invModule.R")
+### Inv SubModules
+source("router/game/beer/beerInvModule.R")
+source("router/game/material/matInvModule.R")
+
+## Action Module
+source("router/game/actionModule.R")
+### Action SubModules
+source("router/game/material/matPurchaseModule.R")
+source("router/game/beer/beerBrewModule.R")
+
+## Progress Module
+source("router/game/progressModule.R")
+### Progress SubModules
+source("router/game/material/matProgModule.R")
+source("router/game/beer/beerTankModule.R")
+source("router/game/demand/customerDemandModule.R")
+
+source("router/game/material/materialHelper.R")
+source("router/game/beer/beerHelper.R")
 source("router/game/gameDBHelper.R")
 source("router/game/helper.R")
 source("router/game/demandHelper.R")
@@ -37,16 +58,19 @@ gameModuleUI <- function(id, disabled=F) {
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            column(width=3,
-                actionBttn(
-                  inputId=ns("reset"), 
-                  label="Reset Game",
-                  style="minimal",
-                  color="default"),
-                htmlOutput(ns("gameStatus"))
-            ),
-            bs4ValueBoxOutput(ns("money"), width=3),
-            bs4ValueBoxOutput(ns("day"), width=3),
+            # column(width=3,
+            #     actionBttn(
+            #       inputId=ns("reset"), 
+            #       label="Reset Game",
+            #       style="minimal",
+            #       color="default"),
+            #     htmlOutput(ns("gameStatus"))
+            # ),
+            bs4ValueBoxOutput(ns("day"), width=2),
+            bs4ValueBoxOutput(ns("money"), width=2),
+            column(width=5,
+                   customerLostUI(ns("customerLost"))
+                   ),
             column(width=3,
                 actionBttn(
                   inputId=ns("advance"), 
@@ -56,9 +80,18 @@ gameModuleUI <- function(id, disabled=F) {
             )
           ),
           fluidRow(
-            materialModuleUI(ns("material")),
-            beerModuleUI(ns("beer")),
-            demandModuleUI(ns("demand"))
+            column(
+              width=3,
+              invModuleUI(ns("inventory"))
+            ),
+            column(
+              width=5,
+              actionModuleUI(ns("action"))
+            ),
+            column(
+              width=4,
+              progressModuleUI(ns("progress"))
+            )
           )
   )
 }
@@ -177,7 +210,7 @@ gameModuleServer <- function(id, USER) {
       ## Info params
       output$money <- renderbs4ValueBox({
         bs4ValueBox(
-          paste("$", general$money), 
+          paste("$", as.character(general$money)), 
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",
@@ -470,18 +503,22 @@ gameModuleServer <- function(id, USER) {
         text
       })
       
+      ### Inventory
+      invModuleServer("inventory", beer, material)
+      
+      
       ## Tanks and Beers
       disabled <- reactive(USER$finish)
       observeEvent(USER$finish, {
         disabled <- USER$finish
       })
-      beerModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
-
-      ## Raw Material
-      materialModuleServer("material", material, general, costInfo, disabled)
+      
+      actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled)
+      
+      progressModuleServer("progress", material, beer, demand)
       
       ## Demand
-      demandModuleServer("demand", demand, disabled)
+      customerLostServer("customerLost", demand)
       
       return(list(USER, gameStateData))
     }

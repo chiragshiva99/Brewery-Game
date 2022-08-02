@@ -24,7 +24,6 @@ beerModuleUI <- function(id) {
            style="material-flat",
            color="warning"
          ),
-         infoBoxOutput(ns("beerInv"), width=12),
          box(width=NULL,
              title="Brewery Tanks",
              htmlOutput(ns("tankInfo"))

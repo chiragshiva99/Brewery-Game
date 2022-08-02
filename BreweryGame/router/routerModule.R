@@ -6,6 +6,8 @@ source("router/userInfo/userInfoModule.R")
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
 
+
+
 routerModuleUI <- function(id) {
   ns <- NS(id)
   fluidPage(
@@ -61,6 +63,7 @@ routerModuleUI <- function(id) {
       ),
       footer =  dashboardFooter(),
       body = dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body")))
+                           
     )
     )
 }

@@ -1,6 +1,9 @@
 source("router/game/material/materialModule.R")
 source("router/game/beer/beerModule.R")
-source("router/game/demand/demandModule.R")
+source("router/game/demand/customerLostModule.R")
+source("router/game/demand/customerDemandModule.R")
+
+source("router/game/invModule.R")
 
 source("router/game/gameDBHelper.R")
 source("router/game/helper.R")
@@ -37,16 +40,19 @@ gameModuleUI <- function(id, disabled=F) {
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            column(width=3,
-                actionBttn(
-                  inputId=ns("reset"), 
-                  label="Reset Game",
-                  style="minimal",
-                  color="default"),
-                htmlOutput(ns("gameStatus"))
-            ),
-            bs4ValueBoxOutput(ns("money"), width=3),
-            bs4ValueBoxOutput(ns("day"), width=3),
+            # column(width=3,
+            #     actionBttn(
+            #       inputId=ns("reset"), 
+            #       label="Reset Game",
+            #       style="minimal",
+            #       color="default"),
+            #     htmlOutput(ns("gameStatus"))
+            # ),
+            bs4ValueBoxOutput(ns("day"), width=2),
+            bs4ValueBoxOutput(ns("money"), width=2),
+            column(width=5,
+                   customerLostUI(ns("customerLost"))
+                   ),
             column(width=3,
                 actionBttn(
                   inputId=ns("advance"), 
@@ -56,10 +62,15 @@ gameModuleUI <- function(id, disabled=F) {
             )
           ),
           fluidRow(
-            materialModuleUI(ns("material")),
-            beerModuleUI(ns("beer")),
-            demandModuleUI(ns("demand"))
+            invModuleUI(ns("inventory")),
+            actionModuleUI(ns("actions")),
+            progressModuleUI(ns("progress"))
           )
+          # fluidRow(
+          #   materialModuleUI(ns("material")),
+          #   beerModuleUI(ns("beer")),
+          #   customerDemandUI(ns("customerDemand"))
+          # )
   )
 }
 
@@ -470,6 +481,9 @@ gameModuleServer <- function(id, USER) {
         text
       })
       
+      ### Inventory
+      invModuleServer("inventory", beer, material)
+      
       ## Tanks and Beers
       disabled <- reactive(USER$finish)
       observeEvent(USER$finish, {
@@ -481,7 +495,8 @@ gameModuleServer <- function(id, USER) {
       materialModuleServer("material", material, general, costInfo, disabled)
       
       ## Demand
-      demandModuleServer("demand", demand, disabled)
+      customerLostServer("customerLost", demand)
+      customerDemandServer("customerDemand", demand, disabled)
       
       return(list(USER, gameStateData))
     }

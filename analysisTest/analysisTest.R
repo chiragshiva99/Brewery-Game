@@ -95,11 +95,19 @@ demandBeer1 <- getFromdemandTrackTable("demandTrack", 1, 20, 1)
 demandBeer2 <- getFromdemandTrackTable("demandTrack", 1, 20, 2)
 demandBeer3 <- getFromdemandTrackTable("demandTrack", 1, 20, 3)
 
+
+#It's overlapping so dont use 
 ggplot(mapping=aes(gameDay, quantity)) +
-  geom_line(data=demandBeer1, color="red", size= 1) +
-  geom_line(data=demandBeer2, color="green", size= 1) +
-  geom_line(data=demandBeer3, color="blue", size= 1) +
-  geom_point(data=demand, size=3) 
+  geom_segment(data= demandBeer1 , mapping = aes(x=gameDay, xend=gameDay, y=0, yend= quantity), color="red", size= 1) +
+  geom_segment(data= demandBeer2 , mapping = aes(x=gameDay, xend=gameDay, y=0, yend= quantity), color="green", size= 1) +
+  geom_segment(data= demandBeer3 , mapping = aes(x=gameDay, xend=gameDay, y=0, yend= quantity), color="blue", size= 1) +
+  geom_point(data=demand, size=3) +
+  labs(title="Beer Demand", 
+       subtitle="Demand Qty vs No. of Days", 
+       x = "Number of Days",
+       y = "Beer Quantity",
+       caption="Beer1=Red, Beer2=Green, Beer3= Blue"
+  )
 
 #create function to set other days to 0
   

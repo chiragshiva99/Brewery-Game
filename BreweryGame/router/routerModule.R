@@ -179,7 +179,7 @@ routerModuleServer <- function(id) {
       
       observe({
         print(USER$selectedTab)
-        updateTabItems(inputId = "tabs", selected=USER$selectedTab)
+        updateTabItems(inputId="tabs", selected=USER$selectedTab)
       })
         
       #### UserInfo Page ####

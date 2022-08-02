@@ -1,20 +1,5 @@
-brewModal <- function(session, tankOptions, beerOptions) {
-  ns <- session$ns
-  modalDialog(
-    title = "Brew a Beer",
-    selectInput(ns("tankSelect"), "Choose a Tank", choices=tankOptions),
-    selectInput(ns("beerChosen"), "Choose a Beer", choices=beerOptions),
-    htmlOutput(ns("beerReq")),
-    footer=tagList(
-      modalButton("Cancel"),
-      actionButton(ns("brewBeer"), "Brew Beer")
-    )
-    
-  )
-}
-
 beerBrewModuleUI <- function(id, tankOptions, beerOptions) {
-  ns <- session$ns
+  ns <- NS(id)
   div(
     h4("Brew a Beer"),
     selectInput(ns("tankSelect"), "Choose a Tank", choices=tankOptions),
@@ -30,7 +15,6 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
     function(input, output, session) {
       
       output$beerReq <- renderUI({
-        click <- input$brew
         shinyjs::disable("brewBeer")
         if (beer$tanks[input$tankSelect,"Beer"] == "Empty") {
           text <- getReqAmt(input$beerChosen, beerReq, material$rawMatQty)

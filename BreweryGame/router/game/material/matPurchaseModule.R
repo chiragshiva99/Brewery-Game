@@ -1,9 +1,9 @@
-matPurchaseModuleUI <- function(id, materialOptions, supplierOptions) {
+matPurchaseModuleUI <- function(id, materialOptions) {
   ns <- NS(id)
   div(
     selectInput(ns("matChosen"), "Choose a Material", choices=materialOptions),
     htmlOutput(ns("supplierCompare")),
-    selectInput(ns("supplierChosen"), "Choose a Supplier", choices=supplierOptions),
+    uiOutput(ns("supplierInput")),
     numericInput(ns("purchQty"), "Enter a Quantity to Purchase", value=0, min=1, step=1),
     htmlOutput(ns("costOfPurchase")),
     actionButton(ns("purchaseok"), "Confirm Purchase")
@@ -14,9 +14,17 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
+      
       output$supplierCompare <- renderTable({
         supplierInfo <- costInfo %>% subset(materialName==input$matChosen) %>% select(-materialName)
         supplierInfo
+      })
+      
+      output$supplierInput <- renderUI({
+        supplierInfo <- costInfo %>% subset(materialName==input$matChosen)
+        
+        selectInput(ns("supplierChosen"), "Choose a Supplier", choices=supplierInfo[,"supplierName"])
       })
       
       output$costOfPurchase <- renderUI({

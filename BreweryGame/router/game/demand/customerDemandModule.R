@@ -1,17 +1,12 @@
-customerDemandUI <- function(id) {
+customerDemandModuleUI <- function(id) {
   ns <- NS(id)
-  column(
-    width=4,
-    box(width=NULL,
-         collapsible=F,
-         title="Customer Demand",
-         htmlOutput(ns("custDemand"))
-        )
+  div(
+    htmlOutput(ns("custDemand"))
   )
 
 }
 
-customerDemandServer <- function(id, demand, disable=F) {
+customerDemandModuleServer <- function(id, demand) {
   moduleServer(
     id,
     function(input, output, session) {

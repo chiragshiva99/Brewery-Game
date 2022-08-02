@@ -14,6 +14,13 @@ source("router/game/actionModule.R")
 source("router/game/material/matPurchaseModule.R")
 source("router/game/beer/beerBrewModule.R")
 
+## Progress Module
+source("router/game/progressModule.R")
+### Progress SubModules
+source("router/game/material/matProgModule.R")
+source("router/game/beer/beerTankModule.R")
+source("router/game/demand/customerDemandModule.R")
+
 source("router/game/material/materialHelper.R")
 source("router/game/beer/beerHelper.R")
 source("router/game/gameDBHelper.R")
@@ -79,17 +86,13 @@ gameModuleUI <- function(id, disabled=F) {
             ),
             column(
               width=5,
-              h3("ACTION"),
               actionModuleUI(ns("action"))
+            ),
+            column(
+              width=4,
+              progressModuleUI(ns("progress"))
             )
-
-            # progressModuleUI(ns("progress"))
           )
-          # fluidRow(
-          #   materialModuleUI(ns("material")),
-          #   beerModuleUI(ns("beer")),
-          #   customerDemandUI(ns("customerDemand"))
-          # )
   )
 }
 
@@ -512,9 +515,10 @@ gameModuleServer <- function(id, USER) {
       
       actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled)
       
+      progressModuleServer("progress", material, beer, demand)
+      
       ## Demand
       customerLostServer("customerLost", demand)
-      customerDemandServer("customerDemand", demand, disabled)
       
       return(list(USER, gameStateData))
     }

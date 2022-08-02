@@ -1,13 +1,5 @@
-menu_tab <- lapply(1:3, function(i) {
-  tabPanel(
-    sprintf("Menu %s", i),
-    sprintf("Hello tab %s", i)
-  )
-})
-
-
 actionModuleUI <- function(id) {
-  ns <- NS
+  ns <- NS(id)
   uiOutput(ns("actionTab"))
 }
 
@@ -18,30 +10,28 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
       ns <- session$ns
       
       output$actionTab <- renderUI({
-        # supplierInfo <- costInfo %>% subset(materialName==input$matChosen)
-        # 
-        # actionTabs <- list()
-        # 
-        # print(actionTabs)
-        # print("actions")
-        # 
-        # # actionTabs[[1]] <- tabPanel(
-        # #   title="Purchase Material",
-        # #   matPurchaseModuleUI(ns("matPurch"), unique(costInfo[,"materialName"]), supplierInfo[,"supplierName"])
-        # # )
-        # # 
-        # actionTabs[[1]] <- tabPanel(
-        #   title="IT WORKS",
-        #   div(
-        #     h4("WTF")
-        #   )
-        # )
-        # 
-        # print(actionTabs)
-        return(tabBox(id=ns("actions"), .list=menu_tabs))
+
+        actionTabs <- list()
+
+        print(actionTabs)
+        print("actions")
+
+        actionTabs[[1]] <- tabPanel(
+          title="Purchase Material",
+          matPurchaseModuleUI(ns("material"), unique(costInfo[,"materialName"]))
+        )
+        
+        actionTabs[[2]] <- tabPanel(
+          title="Brew Beer",
+          beerBrewModuleUI(ns("beer"), beer$tanks[,"Tank"], beer$beerInv[, "name"])
+        )
+
+        print(actionTabs)
+        return(tabBox(title="Actions", id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
       })
       
-      # matPurchaseModuleServer("matPurch", general, material, costInfo, disabled)
+      matPurchaseModuleServer("material", general, material, costInfo, disabled)
+      beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
     }
   )
 }

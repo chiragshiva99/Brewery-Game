@@ -17,7 +17,7 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
       ns <- session$ns
       
       output$supplierCompare <- renderTable({
-        supplierInfo <- costInfo %>% subset(materialName==input$matChosen) %>% select(-materialName)
+        supplierInfo <- costInfo %>% subset(materialName==input$matChosen) %>% select(-materialName) %>% rename(Supplier=supplierName, "Order Cost"=fixedCost, "Unit Cost"=variableCost, "Lead Time"=daysToComplete)
         supplierInfo
       })
       

@@ -19,7 +19,7 @@ progressModuleUI <- function(id) {
   )
 }
 
-progressModuleServer <- function(id, material, beer, demand) {
+progressModuleServer <- function(id, material, beer, demand, general, beerInfo, customerInfo, customerDemand) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -27,7 +27,7 @@ progressModuleServer <- function(id, material, beer, demand) {
       
       matProgModuleServer("material", material)
       beerTankModuleServer("beer", beer)
-      customerDemandModuleServer("demand", demand)
+      customerDemandModuleServer("demand", demand, general, beer, beerInfo, customerInfo, customerDemand)
       
     }
   )

@@ -3,7 +3,7 @@ actionModuleUI <- function(id) {
   uiOutput(ns("actionTab"))
 }
 
-actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, costInfo, disabled) {
+actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -12,9 +12,6 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
       output$actionTab <- renderUI({
 
         actionTabs <- list()
-
-        print(actionTabs)
-        print("actions")
 
         actionTabs[[1]] <- tabPanel(
           title="Purchase Material",
@@ -25,13 +22,20 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
           title="Brew Beer",
           beerBrewModuleUI(ns("beer"), beer$tanks[,"Tank"], beer$beerInv[, "name"])
         )
+        
+        actionTabs[[3]] <- tabPanel(
+          title="Store Beer",
+          beerStoreModuleUI(ns("beerStore"))
+        )
 
-        print(actionTabs)
         return(tabBox(title="Actions", id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
       })
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled)
       beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
+      AUTO <- beerStoreModuleServer("beerStore", beer, material, AUTO)
+      # allAuto <- automateModuleServer("automate", )
+      return(AUTO)
     }
   )
 }

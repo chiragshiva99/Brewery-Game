@@ -62,7 +62,7 @@ getCustomerInfo <- function() {
   result
 }
 
-getCustomerData <- function(){
+getCustomerDemandData <- function(){
   conn <- getAWSConnection()
   query <- "SELECT f.customerName, b.name as beerName, f.waitTime, f.meanArrivalTime, f.revenueExtra, f.mean, f.sd FROM (SELECT c.name as customerName, d.waitTime, d.meanArrivalTime, d.beerID, d.revenueExtra, d.mean, d.sd FROM customerNames c INNER JOIN demandParameters d ON c.customerID=d.customerID) f INNER JOIN beerParameters b ON f.beerID=b.beerID"
   result <- dbGetQuery(conn,query)

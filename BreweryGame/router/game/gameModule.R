@@ -1,6 +1,5 @@
 ## Customer Modules
 source("router/game/demand/customerLostModule.R")
-source("router/game/demand/customerDemandModule.R")
 
 ## Inventory Module
 source("router/game/invModule.R")
@@ -158,10 +157,11 @@ gameModuleServer <- function(id, USER) {
       gameStateData <- reactiveValues(beer=beerState, cash=cashState, mat=matState, demand=demandState, tank=tankState)
       
       # Reactive Values
-      general <- reactiveValues(money=startingMoney, day=initDay)
+      general <- reactiveValues(money=startingMoney, day=initDay, dayRevenue=0)
       beer <- reactiveValues(tanks=tanks, beerInv=beerInv)
       material <- reactiveValues(rawMatOrder=rawMatOrder, rawMatQty=rawMatQty)
-      demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=lostPerBeer)
+      demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=lostPerBeer,   dayDemandDF=demandState)
+      AUTO <- reactiveValues(beerStore=F)
       
       # General
       ## Reset Game 
@@ -233,25 +233,20 @@ gameModuleServer <- function(id, USER) {
       
       ## Advance Button
       observeEvent(input$advance, {
-        # ### If user just started playing the game
-        # # Store Demand Data
-        # if(general$day == 1) {
-        #   storeAllDemand(totalDemand)
-        #   print("store all demand")
-        # }
-        
         if(general$day == 1) {
           print(seed)
           updateSeed(USER$id, USER$gameID, seed)
         }
         
-        c(demand, dayDemandDF, beer, revenue, lostRev, lostBeerOrders, removeDemand, unsatisDemand) %<-% satisfyDemandAuto(beerInfo, demand, beer, general, customerInfo, customerDemand)
+        c(demand, beer, general, lostRev, lostBeerOrders, removeDemand, unsatisDemand) %<-% satisfyDemandAuto(beerInfo, demand, beer, general, customerInfo, customerDemand)
         
         ## Add demand Data to DB if necessary
-        if(nrow(dayDemandDF) > 0) {
-          dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayDemandDF)),dayDemandDF)
-          addToTable("demandTrack", dayDemandDF)
+        if(nrow(demand$dayDemandDF) > 0) {
+          demand$dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(demand$dayDemandDF)),demand$dayDemandDF)
+          addToTable("demandTrack", demand$dayDemandDF)
         }
+        
+
         
         ## Update the demand of system
         if(nrow(demand$dayDemand) > 0) {
@@ -275,7 +270,7 @@ gameModuleServer <- function(id, USER) {
         data <- list()
         data$gameDay <- day
         data$cashBalance <- general$money
-        data$revenue <- revenue
+        data$revenue <- general$dayRevenue
         data$lostRev <- lostRev
         
         dayCashDF <- rbind(dayCashDF, data)
@@ -309,7 +304,7 @@ gameModuleServer <- function(id, USER) {
         ## Add all to gameStateData
         gameStateData$beer <- addToGameState(gameStateData$beer, dayBeerDF)
         gameStateData$mat <- addToGameState(gameStateData$mat, dayMatDF)
-        gameStateData$demand <- addToGameState(gameStateData$demand, dayDemandDF)
+        gameStateData$demand <- addToGameState(gameStateData$demand, demand$dayDemandDF)
         gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
         gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
         
@@ -317,7 +312,11 @@ gameModuleServer <- function(id, USER) {
           updateCashBalance(USER$id, USER$gameID, general$money)
           showModal(endGameModal(session))
         }
-
+        
+        ## Resetting reactive Values
+        demand$dayDemandDF <- createDemandStateDF()
+        general$dayRevenue <- 0
+        
         #### START OF DAY n+1 ####
         
         ## Advance game as required
@@ -333,6 +332,14 @@ gameModuleServer <- function(id, USER) {
         newDemand <- subset(totalDemand, arrivalDay==general$day)
         if (nrow(newDemand) > 0) {
           demand$dayDemand <- rbind(demand$dayDemand, newDemand)
+        }
+        
+        ## Complete Tank Orders if automated
+        print("Tank Store Auto Status")
+        print(AUTO$beerStore)
+        print(AUTO$beerStore)
+        if (AUTO$beerStore) {
+          beer <- completeBeerInTank(beer)
         }
         
         ## Add completed Raw Material Orders
@@ -374,9 +381,9 @@ gameModuleServer <- function(id, USER) {
         disabled <- USER$finish
       })
       
-      actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled)
+      AUTO <- actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO)
       
-      progressModuleServer("progress", material, beer, demand)
+      progressModuleServer("progress", material, beer, demand, general, beerInfo, customerInfo, customerDemand)
       
       customerLostServer("customerLost", demand)
       

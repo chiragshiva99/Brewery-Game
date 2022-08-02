@@ -6,7 +6,39 @@ source("router/userInfo/userInfoModule.R")
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
 
-
+mytheme <- create_theme(
+  bs4dash_vars(
+    navbar_light_color = "#bec5cb",
+    navbar_light_active_color = "#FFF",
+    navbar_light_hover_color = "#FFF"
+  ),
+  bs4dash_yiq(
+    contrasted_threshold = 10,
+    text_dark = "#FFF", 
+    text_light = "#272c30"
+  ),
+  bs4dash_layout(
+    main_bg = "#353c42"
+  ),
+  bs4dash_sidebar_light(
+    bg = "#272c30", 
+    color = "#bec5cb",
+    hover_color = "#FFF",
+    submenu_bg = "#272c30", 
+    submenu_color = "#FFF", 
+    submenu_hover_color = "#FFF"
+  ),
+  bs4dash_status(
+    primary = "#5E81AC", danger = "#BF616A", light = "#272c30"
+  ),
+  bs4dash_color(
+    gray_900 = "#FFF"
+  ),
+  bs4dash_font(
+    size_base="0.8rem",
+    weight_bold=900
+  )
+)
 
 routerModuleUI <- function(id) {
   ns <- NS(id)
@@ -62,7 +94,11 @@ routerModuleUI <- function(id) {
         pinned = NULL
       ),
       footer =  dashboardFooter(),
-      body = dashboardBody(shinyjs::useShinyjs(), uiOutput(ns("body")))
+      body = dashboardBody(
+        use_theme(mytheme),
+        shinyjs::useShinyjs(), 
+        uiOutput(ns("body"))
+      )
                            
     )
     )

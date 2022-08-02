@@ -1,13 +1,35 @@
 beerStoreModuleUI <- function(id) {
   ns <- NS(id)
-  uiOutput(ns("tankStore"))
+  div(
+    uiOutput(ns("autoSwitch")),
+    uiOutput(ns("tankStore"))
+  )
+
 }
 
-beerStoreModuleServer <- function(id, beer, material) {
+beerStoreModuleServer <- function(id, beer, material, AUTO) {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
+      
+      storeAuto <- reactive({FALSE})
+      
+      observeEvent(input$beerStoreAuto, {
+        if(!is.null(input$beerStoreAuto)) {
+          AUTO$beerStore <- input$beerStoreAuto
+        }
+      })
+      
+      output$autoSwitch <- renderUI({
+        materialSwitch(
+          inputId = ns("beerStoreAuto"),
+          label = "Auto Storage", 
+          value = AUTO$beerStore,
+          status = "success",
+          right=T
+        )
+      })
       
       output$tankStore <- renderUI({
         finishTanks <- subset(beer$tanks, (Beer!="Empty") & (DaysInTank >= daysToComplete))
@@ -17,7 +39,6 @@ beerStoreModuleServer <- function(id, beer, material) {
               actionBttn(inputId=ns(paste0("storeTank", finishTanks[i,"Tank"])),
                          label=paste0("Store ", finishTanks[i, "Beer"], " from Tank ", finishTanks[i,"Tank"]),
                          style="jelly"
-                         
               )
             }) 
           )
@@ -40,8 +61,7 @@ beerStoreModuleServer <- function(id, beer, material) {
         } else {
           res <- list()
         }
-        print(paste("res", res))
-        print(finishTanks)
+
         if ((nrow(finishTanks) > 0) & (length(res) > 0)) {
           for (i in 1:nrow(finishTanks)) {
             tank <- finishTanks[i, "Tank"]
@@ -49,7 +69,6 @@ beerStoreModuleServer <- function(id, beer, material) {
             print(res[[i]])
             if(!is.null(res[[i]])) {
               if(res[[i]] > 0) {
-                print("store beer!!!")
                 beerIdx <- which(beer$beerInv["name"] == beer$tanks[tank, "Beer"])
                 beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] + beer$tanks[tank, "tankSize"]
                 
@@ -60,11 +79,9 @@ beerStoreModuleServer <- function(id, beer, material) {
             } 
           }
         }
-        print(length(res))
-        print("response from buttons")
-        print(res)
-
       })
+      
+      return(AUTO)
     }
   )
 }

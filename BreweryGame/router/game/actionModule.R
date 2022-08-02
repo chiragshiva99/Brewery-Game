@@ -3,7 +3,7 @@ actionModuleUI <- function(id) {
   uiOutput(ns("actionTab"))
 }
 
-actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, costInfo, disabled) {
+actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -33,7 +33,9 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled)
       beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
-      beerStoreModuleServer("beerStore", beer, material)
+      AUTO <- beerStoreModuleServer("beerStore", beer, material, AUTO)
+      # allAuto <- automateModuleServer("automate", )
+      return(AUTO)
     }
   )
 }

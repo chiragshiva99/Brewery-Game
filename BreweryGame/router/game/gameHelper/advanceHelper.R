@@ -1,24 +1,23 @@
+
+
 satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, customerDemand) {
   lostBeerOrders <- getLostBeerList(beerInfo)
-  
-  dayDemandDF <- createDemandStateDF()
   
   ## Satisfy and unsatisfied Demand
   removeDemand <- c()
   unsatisDemand <- c()
-  revenue <- 0
   lostRev <- 0
   if (nrow(demand$dayDemand) > 0) {
     for (row in 1:nrow(demand$dayDemand)) {
       # Satisfied?
       demandData <- list()
       addToDB <- F
-      
       beerType <- demand$dayDemand[row, "Beer"]
       beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
       customerName <- demand$dayDemand[row, "Customer"]
       qty <- demand$dayDemand[row, "Quantity"]
       beerIdx <- which(beer$beerInv$name == beerType)
+      
       if (beer$beerInv[beerIdx,"qty"] >= qty) {
         addToDB <- T
         beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
@@ -26,7 +25,7 @@ satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, cus
         
         general$money <- general$money + beerRevenue
         
-        revenue <- revenue + beerRevenue
+        general$dayRevenue <- general$dayRevenue + beerRevenue
         
         removeDemand <- c(removeDemand, row)
         
@@ -60,16 +59,15 @@ satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, cus
         demandData$quantity <- qty
         demandData$arrivalDay <- demand$dayDemand[row, "arrivalDay"]
         
-        dayDemandDF <- rbind(dayDemandDF, demandData)
+        demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
       }
     }
   }
   
   return(list(
     demand,
-    dayDemandDF,
     beer,
-    revenue,
+    general,
     lostRev,
     lostBeerOrders,
     removeDemand,

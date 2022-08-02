@@ -2,7 +2,7 @@
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
 #
-# Find out more about building applicatioSns with Shiny here:
+# Find out more about building applications with Shiny here:
 #
 #    http://shiny.rstudio.com/  
 #
@@ -15,7 +15,7 @@
 # without giving them access to your personal AWS database.
 
 source("usePackages.R")
-pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","bs4Dash", "shinyauthr", "DT", "sodium", "shinyBS", "plotly", "shinyWidgets", "zeallot")
+pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","bs4Dash", "shinyauthr", "DT", "sodium", "shinyBS", "plotly", "shinyWidgets", "zeallot", "fresh")
 loadPkgs(pkgnames)
 
 

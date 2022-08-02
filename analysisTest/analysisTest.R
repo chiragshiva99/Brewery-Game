@@ -105,12 +105,7 @@ ggplot(data=demand, mapping=aes(gameDay, quantity, color=Beer)) +
        y = "Beer Quantity"
   )
 
-
-demandBeer1 <- subset(demand, demand$beerID==1)
-demandBeer2 <- subset(demand, demand$beerID==2)
-demandBeer3 <- subset(demand, demand$beerID==3)
-
-ggplot(data=demandBeer1, mapping=aes(gameDay, quantity, fill= Beer)) +
+ggplot(data=demand, mapping=aes(gameDay, quantity, fill = Beer)) +
   geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity") +
   labs(title="Demand for Beer 1", 
        subtitle="Demand Qty vs No. of Days", 
@@ -118,8 +113,21 @@ ggplot(data=demandBeer1, mapping=aes(gameDay, quantity, fill= Beer)) +
        y = "Beer Quantity"
   )
 
+
+demandBeer1 <- subset(demand, demand$beerID==1)
+demandBeer2 <- subset(demand, demand$beerID==2)
+demandBeer3 <- subset(demand, demand$beerID==3)
+
+ggplot(data=demandBeer1, mapping=aes(gameDay, quantity)) +
+  geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#EC9D00", color = "black") +
+  labs(title="Demand for Beer 1", 
+       subtitle="Demand Qty vs No. of Days", 
+       x = "Number of Days",
+       y = "Beer Quantity"
+  )
+
 ggplot(data=demandBeer2, mapping=aes(gameDay, quantity, fill= Beer)) +
-  geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity") +
+  geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#FAE96F", color = "black") +
   labs(title="Demand for Beer 2", 
        subtitle="Demand Qty vs No. of Days", 
        x = "Number of Days",
@@ -127,17 +135,35 @@ ggplot(data=demandBeer2, mapping=aes(gameDay, quantity, fill= Beer)) +
   )
 
 ggplot(data=demandBeer3, mapping=aes(gameDay, quantity, fill= Beer)) +
-  geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity") +
+  geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#F6C101", color = "black") +
   labs(title="Demand for Beer 3", 
        subtitle="Demand Qty vs No. of Days", 
        x = "Number of Days",
        y = "Beer Quantity"
   )
 
+#----------------------------Demand 
 
+demandBeer1
 
+demandData <- data.frame(matrix(NA,    # Create empty data frame
+                          nrow = 20,
+                          ncol = 0))
+demandData
 
+demandData$gameDay <- 1:20
 
-
+demandData$quantity <- 
+for (i in 1:nrow(demandData)) {
+  if(i==demandBeer1$gameDay) {
+    ifelse(i==demandData$gameDay, demandBeer1$quantity, 0)
+  }
+  
+  #ifelse(i==demandBeer1$gameDay, demandData$quantity = demandBeer1$quantity, 0)
+}
+  
+demandData$quantity <- for (i in (demandData$gameDay)) {
+  ifelse(i==demandBeer1$gameDay, demandBeer1$quantity, 0)
+}
 
 

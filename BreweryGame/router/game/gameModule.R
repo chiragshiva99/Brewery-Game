@@ -1,10 +1,21 @@
-source("router/game/material/materialModule.R")
-source("router/game/beer/beerModule.R")
+## Customer Modules
 source("router/game/demand/customerLostModule.R")
 source("router/game/demand/customerDemandModule.R")
 
+## Inventory Module
 source("router/game/invModule.R")
+### Inv SubModules
+source("router/game/beer/beerInvModule.R")
+source("router/game/material/matInvModule.R")
 
+## Action Module
+source("router/game/actionModule.R")
+### Action SubModules
+source("router/game/material/matPurchaseModule.R")
+source("router/game/beer/beerBrewModule.R")
+
+source("router/game/material/materialHelper.R")
+source("router/game/beer/beerHelper.R")
 source("router/game/gameDBHelper.R")
 source("router/game/helper.R")
 source("router/game/demandHelper.R")
@@ -62,9 +73,17 @@ gameModuleUI <- function(id, disabled=F) {
             )
           ),
           fluidRow(
-            invModuleUI(ns("inventory")),
-            actionModuleUI(ns("actions")),
-            progressModuleUI(ns("progress"))
+            column(
+              width=3,
+              invModuleUI(ns("inventory"))
+            ),
+            column(
+              width=5,
+              h3("ACTION"),
+              actionModuleUI(ns("action"))
+            )
+
+            # progressModuleUI(ns("progress"))
           )
           # fluidRow(
           #   materialModuleUI(ns("material")),
@@ -188,7 +207,7 @@ gameModuleServer <- function(id, USER) {
       ## Info params
       output$money <- renderbs4ValueBox({
         bs4ValueBox(
-          paste("$", general$money), 
+          paste("$", as.character(general$money)), 
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",
@@ -484,15 +503,14 @@ gameModuleServer <- function(id, USER) {
       ### Inventory
       invModuleServer("inventory", beer, material)
       
+      
       ## Tanks and Beers
       disabled <- reactive(USER$finish)
       observeEvent(USER$finish, {
         disabled <- USER$finish
       })
-      beerModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
-
-      ## Raw Material
-      materialModuleServer("material", material, general, costInfo, disabled)
+      
+      actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled)
       
       ## Demand
       customerLostServer("customerLost", demand)

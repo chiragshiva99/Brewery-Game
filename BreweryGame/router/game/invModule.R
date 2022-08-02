@@ -1,12 +1,9 @@
-source("router/game/beer/beerInvModule.R")
-source("router/game/material/matInvModule.R")
-
 invModuleUI <- function(id) {
   ns <- NS(id)
   tabBox(
     id=ns("inv"),
     title="Inventory",
-    width=3,
+    width=NULL,
     collapsible=F,
     tabPanel(
       title="All",

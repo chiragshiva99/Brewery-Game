@@ -158,7 +158,6 @@ routerModuleServer <- function(id) {
           sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
         }
         
-        print(sidebarMenuItems)
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       

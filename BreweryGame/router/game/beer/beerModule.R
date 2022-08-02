@@ -1,4 +1,4 @@
-source("router/game/beer/beerHelper.R")
+
 
 brewModal <- function(session, tankOptions, beerOptions) {
   ns <- session$ns

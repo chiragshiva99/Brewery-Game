@@ -1,0 +1,55 @@
+matPurchaseModuleUI <- function(id, materialOptions, supplierOptions) {
+  ns <- NS(id)
+  div(
+    selectInput(ns("matChosen"), "Choose a Material", choices=materialOptions),
+    htmlOutput(ns("supplierCompare")),
+    selectInput(ns("supplierChosen"), "Choose a Supplier", choices=supplierOptions),
+    numericInput(ns("purchQty"), "Enter a Quantity to Purchase", value=0, min=1, step=1),
+    htmlOutput(ns("costOfPurchase")),
+    actionButton(ns("purchaseok"), "Confirm Purchase")
+  )
+}
+
+matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
+  moduleServer(
+    id,
+    function(input, output, session) {
+      output$supplierCompare <- renderTable({
+        supplierInfo <- costInfo %>% subset(materialName==input$matChosen) %>% select(-materialName)
+        supplierInfo
+      })
+      
+      output$costOfPurchase <- renderUI({
+        shinyjs::disable("purchaseok")
+        amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        print(amt)
+        if (is.na(amt)) {
+          text <- "Please input a value"
+        } else if (input$purchQty != as.integer(input$purchQty)){
+          text <- "Please enter an Integer value"
+        } else if (amt <= general$money) {
+          text <-  paste("Amount:", amt)
+          shinyjs::enable("purchaseok")
+        } else {
+          text <- "Not Enough Money to purchase!"
+        }
+        text 
+      })
+      
+      observeEvent(input$purchaseok, {
+        newEntry <- data.frame(Material=input$matChosen, Quantity=input$purchQty, Days=0, Supplier=input$supplierChosen, daysToComplete=costInfo[which(costInfo$materialName == input$matChosen), "daysToComplete"])
+        material$rawMatOrder <- rbind(material$rawMatOrder, newEntry)
+        general$money <- general$money - calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        removeModal()
+      })
+      
+      observeEvent(disabled(), {
+        if(disabled()) {
+          shinyjs::disable("purchaseok")
+        } else {
+          shinyjs::enable("purchaseok")
+        }
+      })
+    }
+  )
+}

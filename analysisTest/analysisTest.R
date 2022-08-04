@@ -79,7 +79,7 @@ newVis <- createVisTank(newTank)
 vistime(newVis)
 
 #dumbbell plot
-ggplot(data = newVis, mapping = aes(x= start, xend= end, y= group, color= event)) +
+ggplot(data = visTank, mapping = aes(x= start, xend= end, y= group, color= event)) +
   geom_dumbbell(size=5,
                 colour_x = "red", colour_xend = "black",
                 dot_guide=TRUE, dot_guide_size=0.5, alpha= 0.7) +

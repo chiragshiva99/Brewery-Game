@@ -24,50 +24,67 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
           custStuff <- h3("No Customers Waiting")
         } else {
           custStuff <- div(
-            fluidRow(
-              column(width=3,
-                     strong("Customer")
-                     ),
-              column(width=2,
-                     strong("Beer")
-                     ),
-              column(width=2,
-                     strong("Qty")
-                     ),
-              column(width=3,
-                     strong("Wait Time")
-                     )
-            ),
-            lapply(1:nrow(demand$dayDemand), function(i) {
-              fluidRow(
-                column(width=3,
-                      demand$dayDemand[i, 1]
-                       ),
-                column(width=2,
-                       demand$dayDemand[i, 2]
-                       ),
-                column(width=2,
-                       demand$dayDemand[i, 3]
-                       ),
-                column(width=2,
-                       demand$dayDemand[i, 4]
-                       ),
-                column(width=3,
-                       actionBttn(
-                         inputId=ns(paste0("custServe",rownames(demand$dayDemand)[i])),
-                         label="Serve",
-                         style="stretch",
-                         color="warning"
-                        )
-                       )
+            tags$table(class="table table-striped table-sm",
+              tags$thead(
+                tags$tr(
+                  tags$th(style="width: 30%",
+                          strong("Customer")
+                  ),
+                  tags$th(style="width: 20%",
+                          strong("Beer")
+                  ),
+                  tags$th(style="width: 10%",
+                          strong("Qty")
+                  ),
+                  tags$th(style="width: 30%",
+                          strong("Wait Time")
+                  )
+                )
+              ),
+              tags$tbody(
+                lapply(1:nrow(demand$dayDemand), function(i) {
+                  div(
+                  tags$tr(
+                    tags$td(style="width: 30%",
+                            demand$dayDemand[i, 1]
+                    ),
+                    tags$td(style="width: 20%",
+                           demand$dayDemand[i, 2]
+                    ),
+                    tags$td(style="width: 10%",
+                           demand$dayDemand[i, 3]
+                    ),
+                    tags$td(style="width: 20%",
+                           demand$dayDemand[i, 4]
+                    ),
+                    tags$td(style="width: 20%",
+                           actionBttn(
+                             inputId=ns(paste0("custServe",rownames(demand$dayDemand)[i])),
+                             label="Serve",
+                             style="fill",
+                             color="warning",
+                             size="xs",
+                             block=T
+                           )
+                    )
+                  ),
+                  tags$tr(
+                    tags$td(colspan="4", style="width: 20%",
+                        progressBar(id = ns(paste0("pb", rownames(demand$dayDemand)[i])), value = 100*(as.integer(demand$dayDemand[i, 4])/as.integer(demand$dayDemand[i, "maxWait"])), status = "success", size = "xs")
+                    )
+                  )
+                  )
+                })
               )
-            })
+            )
           )
         }
         return(custStuff)
       })
       
       observe({
+        print("FRACTION")
+        print(demand$dayDemand[1,4]/demand$dayDemand[1, "maxWait"])
         if (nrow(demand$dayDemand)> 0) {
           res <- lapply(1:nrow(demand$dayDemand), function(i) {
             input[[paste0("custServe",rownames(demand$dayDemand)[i])]]

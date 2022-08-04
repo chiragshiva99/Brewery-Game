@@ -43,10 +43,14 @@ mytheme <- create_theme(
 routerModuleUI <- function(id) {
   ns <- NS(id)
   fluidPage(
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+    ),
     dashboardPage(
       title = "The Brewery Game Dashboard",
       fullscreen = TRUE,
       dark=TRUE,
+
       
       header = dashboardHeader(
         title = dashboardBrand(

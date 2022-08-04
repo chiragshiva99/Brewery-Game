@@ -161,7 +161,7 @@ gameModuleServer <- function(id, USER) {
       beer <- reactiveValues(tanks=tanks, beerInv=beerInv)
       material <- reactiveValues(rawMatOrder=rawMatOrder, rawMatQty=rawMatQty)
       demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=lostPerBeer,   dayDemandDF=demandState)
-      AUTO <- reactiveValues(beerStore=F)
+      AUTO <- reactiveValues(beerStore=F, serveCust=F)
       
       # General
       ## Reset Game 
@@ -238,7 +238,15 @@ gameModuleServer <- function(id, USER) {
           updateSeed(USER$id, USER$gameID, seed)
         }
         
-        c(demand, beer, general, lostRev, lostBeerOrders, removeDemand, unsatisDemand) %<-% satisfyDemandAuto(beerInfo, demand, beer, general, customerInfo, customerDemand)
+        if (AUTO$serveCust) {
+          c(demand, beer, general, lostRev, lostBeerOrders, removeDemand, unsatisDemand) %<-% satisfyDemandAuto(beerInfo, demand, beer, general, customerInfo, customerDemand)
+        } else {
+          lostRev <- 0
+          lostBeerOrders <- getLostBeerList(beerInfo)
+          removeDemand <- c()
+          unsatisDemand <- c()
+        }
+       
         
         ## Add demand Data to DB if necessary
         if(nrow(demand$dayDemandDF) > 0) {

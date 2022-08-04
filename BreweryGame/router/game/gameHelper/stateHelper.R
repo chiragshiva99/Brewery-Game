@@ -77,3 +77,17 @@ createStateDataFrame <- function(beerInfo, rawMatQty, tanks) {
   
   return(stateData)
 }
+
+createMaterialAuto <- function(materialInfo) {
+  materialInfo$reorderQuantity <- 0
+  materialInfo$reorderPoint <- 0
+  
+  return(materialInfo)
+}
+
+createBeerAuto <- function(beerInfo) {
+  beerInfo <- beerInfo[, c("beerID", "name")]
+  beerInfo$reorderPoint <- 0
+  
+  return(beerInfo)
+}

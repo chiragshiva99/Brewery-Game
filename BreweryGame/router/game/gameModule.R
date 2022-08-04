@@ -154,6 +154,10 @@ gameModuleServer <- function(id, USER) {
       demandState <- createDemandStateDF()
       tankState <- createTankStateDF()
       
+      ## Automate State Storing
+      materialAuto <- createMaterialAuto(materialInfo)
+      beerAuto <- createBeerAuto(beerInfo)
+      
       # Initialize whole gameStateData
       gameStateData <- reactiveValues(beer=beerState, cash=cashState, mat=matState, demand=demandState, tank=tankState)
       
@@ -162,7 +166,7 @@ gameModuleServer <- function(id, USER) {
       beer <- reactiveValues(tanks=tanks, beerInv=beerInv)
       material <- reactiveValues(rawMatOrder=rawMatOrder, rawMatQty=rawMatQty)
       demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=lostPerBeer,   dayDemandDF=demandState)
-      AUTO <- reactiveValues(all=F, beerStore=F, serveCust=F, beer=F, material=F)
+      AUTO <- reactiveValues(all=F, beerStore=F, serveCust=F, beer=F, material=F, materialAuto=materialAuto, beerAuto=beerAuto)
       
       # General
       ## Reset Game 
@@ -390,7 +394,7 @@ gameModuleServer <- function(id, USER) {
         disabled <- USER$finish
       })
       
-      AUTO <- actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO, demand, customerInfo, customerDemand)
+      AUTO <- actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO, demand, customerInfo, customerDemand, materialInfo)
       
       AUTO <- progressModuleServer("progress", material, beer, demand, general, beerInfo, customerInfo, customerDemand, tanks, AUTO)
       

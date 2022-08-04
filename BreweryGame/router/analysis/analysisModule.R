@@ -72,6 +72,7 @@ analysisModuleServer <- function(id, stateData) {
       output$demandPlot <- renderPlotly({
         demandData <- stateData$demand
         demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+        # print(demandData)
         
         demandBeer1 <- subset(demandData, demandData$beerID==1)
         demandBeer2 <- subset(demandData, demandData$beerID==2)
@@ -93,7 +94,7 @@ analysisModuleServer <- function(id, stateData) {
       })
       
       output$beerPlot <- renderPlotly({
-        print(stateData$beer)
+        # print(stateData$beer)
         beerData <- stateData$beer
         beerData <- beerData %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name)
         
@@ -110,7 +111,7 @@ analysisModuleServer <- function(id, stateData) {
       })
       
       output$materialPlot <- renderPlotly({
-        print(stateData$mat)
+        # print(stateData$mat)
         materialData <- stateData$mat
         materialData <- materialData %>% left_join(materialInfo, by=c("materialID")) %>% rename(Material=name)
         materialData$Material <- ifelse(materialData$materialID==1, "Malt", ifelse(materialData$materialID==2, "Hops", "Yeast"))

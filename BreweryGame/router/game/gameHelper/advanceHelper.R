@@ -1,83 +1,130 @@
 
 #### DEMAND RELATED ####
-serveCustomers <- function() {
+serveCustomer <- function(i, general, demand, beer, beerInfo, customerInfo, customerDemand) {
+  demandData <- list()
   
+  addToDB <- F
+  
+  beerType <- demand$dayDemand[i, "Beer"]
+  beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
+  customerName <- demand$dayDemand[i, "Customer"]
+  qty <- demand$dayDemand[i, "Quantity"]
+  beerIdx <- which(beer$beerInv$name == beerType)
+  
+  if (beer$beerInv[beerIdx,"qty"] >= qty) {
+    addToDB <- T
+    beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
+    beerRevenue <- qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customerDemand[which((customerDemand$beerName == beerType) & (customerDemand$customerName == customerName)), "revenueExtra"])
+    
+    general$money <- general$money + beerRevenue
+    general$dayRevenue <- general$dayRevenue + beerRevenue
+  }
+  
+  demandData$gameDay <- general$day
+  demandData$beerID <- beerID
+  demandData$customerID <- customerInfo[which(customerInfo$name == customerName), "customerID"]
+  demandData$quantity <- qty
+  demandData$arrivalDay <- demand$dayDemand[i, "arrivalDay"]
+  demandData$serviceDay <- general$day
+  
+  return(
+    list(
+      addToDB,
+      demandData,
+      general,
+      demand,
+      beer
+    )
+  )
 }
-satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, customerDemand) {
-  lostBeerOrders <- getLostBeerList(beerInfo)
-  
+
+satisfyDemandAuto <- function(general, demand, beer, beerInfo, customerInfo, customerDemand) {
   ## Satisfy and unsatisfied Demand
   removeDemand <- c()
-  unsatisDemand <- c()
-  lostRev <- 0
+
   if (nrow(demand$dayDemand) > 0) {
     for (row in 1:nrow(demand$dayDemand)) {
       # Satisfied?
-      demandData <- list()
-      addToDB <- F
-      beerType <- demand$dayDemand[row, "Beer"]
-      beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
-      customerName <- demand$dayDemand[row, "Customer"]
-      qty <- demand$dayDemand[row, "Quantity"]
-      beerIdx <- which(beer$beerInv$name == beerType)
-      
-      if (beer$beerInv[beerIdx,"qty"] >= qty) {
-        addToDB <- T
-        beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
-        beerRevenue <- qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customerDemand[which((customerDemand$beerName == beerType) & (customerDemand$customerName == customerName)), "revenueExtra"])
-        
-        general$money <- general$money + beerRevenue
-        
-        general$dayRevenue <- general$dayRevenue + beerRevenue
-        
-        removeDemand <- c(removeDemand, row)
-        
-        demandData$serviceDay <- general$day
-      }
-      
-      # Unsatisfied?
-      dayWait <- demand$dayDemand[row, "Day"]
-      maxWait <- demand$dayDemand[row, "maxWait"]
-      lostIdx <- which(demand$lostPerBeer$name == beerType)
-      
-      if (dayWait > maxWait) {
-        addToDB <- T
-        unsatisDemand <- c(unsatisDemand, row)
-        demand$lostPerBeer[lostIdx, "lostQty"] <- demand$lostPerBeer[lostIdx, "lostQty"] + qty
-        beerLostRev <- qty*demand$lostPerBeer[lostIdx, "stockOut"]
-        general$money <- general$money - beerLostRev
-        lostRev <- lostRev + beerLostRev
-        
-        lostBeerOrders[[beerID]] <- lostBeerOrders[[beerID]] + qty
-        
-        removeDemand <- c(removeDemand, row)
-        demandData$serviceDay <- -1
-      }
-      
+      c(addToDB, demandData, general, demand, beer) %<-% serveCustomer(row, general, demand, beer, beerInfo, customerInfo, customerDemand)
+
       ## Add to dayDemandDF
       if(addToDB) {
-        demandData$gameDay <- general$day
-        demandData$beerID <- beerID
-        demandData$customerID <- customerInfo[which(customerInfo$name == customerName), "customerID"]
-        demandData$quantity <- qty
-        demandData$arrivalDay <- demand$dayDemand[row, "arrivalDay"]
-        
+        removeDemand <- c(removeDemand, row)
         demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
       }
     }
   }
   
+  if (!vector.is.empty(removeDemand)){
+    demand$dayDemand <- demand$dayDemand[-c(removeDemand),]
+  }
+  
   return(list(
-    demand,
-    beer,
     general,
-    lostRev,
-    lostBeerOrders,
-    removeDemand,
-    unsatisDemand
+    demand,
+    beer
   ))
 }
 
+## Check unsatisfied Customers
+checkUnsatisfiedCust <- function(general, demand, beer, beerInfo, customerInfo) {
+  lostBeerOrders <- getLostBeerList(beerInfo)
+  lostRev <- 0
+  
+  unsatisDemand <- which(demand$dayDemand$Day > demand$dayDemand$maxWait) 
+  print(unsatisDemand)
+  if(length(unsatisDemand) == 0) {
+    return(list(
+      general,
+      demand,
+      beer,
+      lostRev,
+      lostBeerOrders
+    ))
+  }
+  for (i in 1:length(unsatisDemand)) {
+    demandData <- list()
+    uIdx <- unsatisDemand[i]
+    beerType <- demand$dayDemand[uIdx, "Beer"]
+    beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
+    customerName <- demand$dayDemand[uIdx, "Customer"]
+    qty <- demand$dayDemand[uIdx, "Quantity"]
+    beerIdx <- which(beer$beerInv$name == beerType)
+    
+    lostIdx <- which(demand$lostPerBeer$name == beerType)
+    
+    demand$lostPerBeer[lostIdx, "lostQty"] <- demand$lostPerBeer[lostIdx, "lostQty"] + qty
+    beerLostRev <- qty*demand$lostPerBeer[lostIdx, "stockOut"]
+    general$money <- general$money - beerLostRev
+    
+    # Tracking Stats
+    lostRev <- lostRev + beerLostRev
+    lostBeerOrders[[beerID]] <- lostBeerOrders[[beerID]] + qty
+    
+    ## Add to Database
+    demandData$gameDay <- general$day
+    demandData$beerID <- beerID
+    demandData$customerID <- customerInfo[which(customerInfo$name == customerName), "customerID"]
+    demandData$quantity <- qty
+    demandData$arrivalDay <- demand$dayDemand[i, "arrivalDay"]
+    demandData$serviceDay <- -1
+    demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
+  }
+  
+  print("UnsatisWorks")
+  if (length(unsatisDemand) > 0){
+    demand$dayDemand <- demand$dayDemand[-unsatisDemand,]
+    demand$lostCust <- demand$lostCust + length(unsatisDemand)
+  }
+  
+  return(list(
+    general,
+    demand,
+    beer,
+    lostRev,
+    lostBeerOrders
+  ))
+}
 
 #### DATABASE RELATED #### 
 generateTankDataToStore <- function(day, beer, beerInfo) {

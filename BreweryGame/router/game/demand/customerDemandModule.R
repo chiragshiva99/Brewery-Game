@@ -122,36 +122,14 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
           for(i in served) {
             # Satisfied?
             demandData <- list()
-            addToDB <- F
+            c(addToDB, demandData, general, demand, beer) %<-% serveCustomer(i, general, demand, beer, beerInfo, customerInfo, customerDemand)
+            
+            # Remove
 
-            beerType <- demand$dayDemand[i, "Beer"]
-            beerID <- beerInfo[which(beerInfo$name == beerType), "beerID"]
-            customerName <- demand$dayDemand[i, "Customer"]
-            qty <- demand$dayDemand[i, "Quantity"]
-            beerIdx <- which(beer$beerInv$name == beerType)
-            if (beer$beerInv[beerIdx,"qty"] >= qty) {
-              addToDB <- T
-              beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] - qty
-              beerRevenue <- qty*(beerInfo[which(beerInfo$name == beerType), "revenue"] + customerDemand[which((customerDemand$beerName == beerType) & (customerDemand$customerName == customerName)), "revenueExtra"])
-
-              general$money <- general$money + beerRevenue
-
-              general$dayRevenue <- general$dayRevenue + beerRevenue
-
-              demandData$serviceDay <- general$day
-              print(demand$dayDemand)
-              print(i)
-              demand$dayDemand <- demand$dayDemand[-c(i),]
-            }
-
+            
             ## Add to dayDemandDF
             if(addToDB) {
-              demandData$gameDay <- general$day
-              demandData$beerID <- beerID
-              demandData$customerID <- customerInfo[which(customerInfo$name == customerName), "customerID"]
-              demandData$quantity <- qty
-              demandData$arrivalDay <- demand$dayDemand[i, "arrivalDay"]
-
+              demand$dayDemand <- demand$dayDemand[-c(i),]
               demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
             } else {
               showModal(notEnoughModal(ns))

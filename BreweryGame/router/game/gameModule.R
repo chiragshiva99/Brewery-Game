@@ -246,36 +246,19 @@ gameModuleServer <- function(id, USER) {
         
         ## If Auto Serve Customers
         if (AUTO$serveCust | AUTO$all) {
-          c(demand, beer, general, lostRev, lostBeerOrders, removeDemand, unsatisDemand) %<-% satisfyDemandAuto(beerInfo, demand, beer, general, customerInfo, customerDemand)
-        } else {
-          lostRev <- 0
-          lostBeerOrders <- getLostBeerList(beerInfo)
-          removeDemand <- c()
-          unsatisDemand <- c()
-        }
-        
+          c(general, demand, beer) %<-% satisfyDemandAuto(general, demand, beer, beerInfo, customerInfo, customerDemand)
+        } 
+        print("SATISFIED")
+        print(demand$dayDemand)
+        demand$dayDemand$Day <- demand$dayDemand$Day + 1
         ## Check for unsatisfied customers and remove them
-        
-        ## store demand data
-        
+        c(general, demand, beer, lostRev, lostBeerOrders) %<-% checkUnsatisfiedCust(general, demand, beer, beerInfo, customerInfo)
+        print("DEMAND DONE")
         ## Store all relevant data
         ## Add demand Data to DB if necessary
         if(nrow(demand$dayDemandDF) > 0) {
           demand$dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(demand$dayDemandDF)),demand$dayDemandDF)
           addToTable("demandTrack", demand$dayDemandDF)
-        }
-        
-        ## Update the demand of system
-        if(nrow(demand$dayDemand) > 0) {
-          print(paste("updating demand for day", general$day))
-        }
-        
-        if (!vector.is.empty(removeDemand)){
-          demand$dayDemand <- demand$dayDemand[-c(removeDemand),]
-        }
-        
-        if (length(unsatisDemand) > 0) {
-          demand$lostCust <- demand$lostCust + length(unsatisDemand)
         }
         
         day <- general$day
@@ -344,9 +327,13 @@ gameModuleServer <- function(id, USER) {
         ## Increase the number of days for tanks and Order
         beer$tanks$DaysInTank <- beer$tanks$DaysInTank + 1
         material$rawMatOrder$Days <- material$rawMatOrder$Days + 1
-        demand$dayDemand$Day <- demand$dayDemand$Day + 1
         
         # Add New Demand
+        ## Update the demand of system
+        if(nrow(demand$dayDemand) > 0) {
+          print(paste("updating demand for day", general$day))
+        }
+        
         newDemand <- subset(totalDemand, arrivalDay==general$day)
         if (nrow(newDemand) > 0) {
           demand$dayDemand <- rbind(demand$dayDemand, newDemand)

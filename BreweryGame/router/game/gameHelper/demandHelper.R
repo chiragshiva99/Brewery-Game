@@ -1,4 +1,3 @@
-
 ## Demand
 generateDemand <- function(customer, iia, normParam, days, beer, maxWait) {
   demand <- data.frame(matrix(nrow=0, ncol=6))
@@ -29,3 +28,4 @@ generateTotalDemand <- function(table,days=100) {
   print(totalDemand)
   totalDemand
 }
+

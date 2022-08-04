@@ -65,8 +65,6 @@ beerStoreModuleServer <- function(id, beer, material, AUTO) {
         if ((nrow(finishTanks) > 0) & (length(res) > 0)) {
           for (i in 1:nrow(finishTanks)) {
             tank <- finishTanks[i, "Tank"]
-            print(paste("i:"))
-            print(res[[i]])
             if(!is.null(res[[i]])) {
               if(res[[i]] > 0) {
                 beerIdx <- which(beer$beerInv["name"] == beer$tanks[tank, "Beer"])

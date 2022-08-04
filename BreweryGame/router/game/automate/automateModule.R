@@ -1,24 +1,51 @@
 automateModuleUI <- function(id) {
   ns <- NS(id)
   div(
-    uiOutput(ns("autoSwitch")),
-    uiOutput(ns("autoMaterial")),
+    fluidRow(
+      column(width=4,
+             uiOutput(ns("autoSwitch"))
+      ),
+      column(width=7, offset=1,
+             uiOutput(ns("autoMaterial")),
+             uiOutput(ns("autoBeer")),
+      )
+    ),
     uiOutput(ns("materialInput")),
-    uiOutput(ns("autoBeer")),
     uiOutput(ns("beerInput"))
     
   )
 }
 
-automateModuleServer <- function(id, AUTO) {
+automateModuleServer <- function(id, AUTO, materialInfo, beerInfo) {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
       
+      updateValMat <- reactiveValues()
+      updateValBeer <- reactiveValues()
+      
+      for (i in 1:nrow(materialInfo)) {
+        updateValMat[[paste0("material", materialInfo[i, "name"])]] <- T
+      }
+      
+      for (i in 1:nrow(beerInfo)) {
+        updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- T
+      }
+      
       observeEvent(input$allAuto, {
         if(!is.null(input$allAuto)) {
           AUTO$all <- input$allAuto
+          AUTO$material <- input$allAuto
+          AUTO$beer <- input$allAuto
+          
+          if(AUTO$all) {
+            shinyjs::disable("materialAuto")
+            shinyjs::disable("beerAuto")
+          } else {
+            shinyjs::enable("materialAuto")
+            shinyjs::enable("beerAuto")
+          }
         }
       })
       
@@ -42,7 +69,7 @@ automateModuleServer <- function(id, AUTO) {
         materialSwitch(
           inputId = ns("materialAuto"),
           label = "Automate Material Order", 
-          value = AUTO$material,
+          value = (AUTO$material | AUTO$all),
           status = "success",
           right=T
         )
@@ -58,10 +85,225 @@ automateModuleServer <- function(id, AUTO) {
         materialSwitch(
           inputId = ns("beerAuto"),
           label = "Automate Beer Brewing", 
-          value = AUTO$beer,
+          value = (AUTO$beer | AUTO$all),
           status = "success",
           right=T
         )
+      })
+      
+      output$materialInput <- renderUI({
+        div(
+          tags$table(class="table table-striped table-sm",
+                     tags$thead(
+                       tags$tr(
+                         tags$th(style="width: 20%",
+                                 strong("Material")
+                         ),
+                         tags$th(style="width: 30%",
+                                 strong("Reorder Quantity")
+                         ),
+                         tags$th(style="width: 30%",
+                                 strong("Reorder Point")
+                         )
+                       )
+                     ),
+                     tags$tbody(
+                       lapply(1:nrow(materialInfo), function(i) {
+                         tags$tr(
+                           tags$td(style="width: 20%",
+                                   tags$em(materialInfo[i, "name"])
+                           ),
+                           tags$td(style="width: 30%",
+                                   htmlOutput(ns(paste0("reQty", materialInfo[i, "name"])))
+                           ),
+                           tags$td(style="width: 30%",
+                                   htmlOutput(ns(paste0("rePt", materialInfo[i, "name"])))
+                           ),
+                           tags$td(style="width: 20%",
+                                   htmlOutput(ns(paste0("action", materialInfo[i, "name"])))
+                             
+                           )
+                         )
+                       })
+                     )
+          )
+        )
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        output[[paste0("reQty", materialInfo[i, "name"])]] <- renderUI({
+          matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
+          
+          if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
+            return(numericInput(
+              ns(paste0("reQty", materialInfo[i, "name"], "Input")),
+              label=NULL,
+              value=AUTO$materialAuto[matIdx, "reorderQuantity"], min=1, step=1
+            )
+            )
+          } else {
+            return(AUTO$materialAuto[matIdx, "reorderQuantity"])
+          }
+        })
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        output[[paste0("rePt", materialInfo[i, "name"])]] <- renderUI({
+          matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
+          
+          if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
+            return(numericInput(
+              ns(paste0("rePt", materialInfo[i, "name"], "Input")),
+              label=NULL,
+              value=AUTO$materialAuto[matIdx, "reorderPoint"], min=1, step=1
+            )
+            )
+          } else {
+            return(AUTO$materialAuto[matIdx, "reorderPoint"])
+          }
+        })
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        output[[paste0("action", materialInfo[i, "name"])]] <- renderUI({
+          if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
+            return(
+              actionBttn(
+                inputId=ns(paste0("submitVal", materialInfo[i, "name"])),
+                label="Submit",
+                style="fill",
+                color="primary",
+                size="sm",
+                block=T
+              )
+            )
+          } else {
+            return(
+              actionBttn(
+                inputId=ns(paste0("updateVal", materialInfo[i, "name"])),
+                label="Update",
+                style="fill",
+                color="success",
+                size="xs",
+                block=T
+              )
+              
+            )
+          }
+        })
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        observeEvent(input[[paste0("submitVal", materialInfo[i, "name"])]], {
+          updateValMat[[paste0("material", materialInfo[i, "name"])]] <- F
+          
+          matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
+          AUTO$materialAuto[matIdx, "reorderQuantity"] <- input[[paste0("reQty", materialInfo[i, "name"], "Input")]]
+          AUTO$materialAuto[matIdx, "reorderPoint"] <- input[[paste0("rePt", materialInfo[i, "name"], "Input")]]
+          
+        })
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        observeEvent(input[[paste0("updateVal", materialInfo[i, "name"])]], {
+          updateValMat[[paste0("material", materialInfo[i, "name"])]] <- T
+        })
+      })
+      
+      output$beerInput <- renderUI({
+        div(
+          tags$table(class="table table-striped table-sm",
+                     tags$thead(
+                       tags$tr(
+                         tags$th(style="width: 20%",
+                                 strong("Beer")
+                         ),
+                         tags$th(style="width: 30%",
+                                 strong("Rebrew Point")
+                         )
+                       )
+                     ),
+                     tags$tbody(
+                       lapply(1:nrow(beerInfo), function(i) {
+                         tags$tr(
+                           tags$td(style="width: 20%",
+                                   tags$em(beerInfo[i, "name"])
+                           ),
+                           tags$td(style="width: 30%",
+                                   htmlOutput(ns(paste0("rePt", beerInfo[i, "name"])))
+                           ),
+                           tags$td(style="width: 20%",
+                                   htmlOutput(ns(paste0("action", beerInfo[i, "name"])))
+                                   
+                           )
+                         )
+                       })
+                     )
+          )
+        )
+      })
+      
+      lapply(1:nrow(beerInfo), function(i) {
+        output[[paste0("rePt", beerInfo[i, "name"])]] <- renderUI({
+          beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
+          
+          if(updateValBeer[[paste0("beer", beerInfo[i, "name"])]]) {
+            return(numericInput(
+              ns(paste0("rePt", beerInfo[i, "name"], "Input")),
+              label=NULL,
+              value=AUTO$beerAuto[beerIdx, "reorderPoint"], min=1, step=1
+            )
+            )
+          } else {
+            return(AUTO$beerAuto[beerIdx, "reorderPoint"])
+          }
+        })
+      })
+      
+      lapply(1:nrow(beerInfo), function(i) {
+        output[[paste0("action", beerInfo[i, "name"])]] <- renderUI({
+          if(updateValBeer[[paste0("beer", beerInfo[i, "name"])]]) {
+            return(
+              actionBttn(
+                inputId=ns(paste0("submitVal", beerInfo[i, "name"])),
+                label="Submit",
+                style="fill",
+                color="primary",
+                size="sm",
+                block=T
+              )
+            )
+          } else {
+            return(
+              actionBttn(
+                inputId=ns(paste0("updateVal", beerInfo[i, "name"])),
+                label="Update",
+                style="fill",
+                color="success",
+                size="xs",
+                block=T
+              )
+              
+            )
+          }
+        })
+      })
+      
+      lapply(1:nrow(beerInfo), function(i) {
+        observeEvent(input[[paste0("submitVal", beerInfo[i, "name"])]], {
+          updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- F
+          
+          beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
+
+          AUTO$beerAuto[beerIdx, "reorderPoint"] <- input[[paste0("rePt", beerInfo[i, "name"], "Input")]]
+          
+        })
+      })
+      
+      lapply(1:nrow(beerInfo), function(i) {
+        observeEvent(input[[paste0("updateVal", beerInfo[i, "name"])]], {
+          updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- T
+        })
       })
       return(AUTO)
     }

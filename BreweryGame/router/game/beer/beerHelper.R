@@ -37,8 +37,26 @@ updateRawMatQty <- function(beerReq, rawMatInfo, beer) {
   beerReqTable <- beerReq %>% subset(beerName == beer) %>% subset(processID == 1) %>% subset(select=c("materialName", "qty")) %>% rename(reqQty = qty) %>% rename(name=materialName)
   checkAmtTable <- merge(beerReqTable, rawMatInfo, by=c("name"), all.x=T)
   
+  
   checkAmtTable$qty <- checkAmtTable$qty - checkAmtTable$reqQty
   
-  checkAmtTable <- subset(checkAmtTable, select=c("name", "qty"))
-  checkAmtTable
+  if(any(checkAmtTable$qty < 0)) {
+    return(rawMatInfo)
+  } else {
+    checkAmtTable <- subset(checkAmtTable, select=c("name", "qty"))
+    
+    return(checkAmtTable)
+  }
+}
+
+brewBeer <- function(tanks, tankSelect, beerChosen, beerInfo, beerReq, rawMatQty) {
+  tanks <- addBeerToTank(tanks, tankSelect, beerChosen, beerInfo)
+  rawMatQty <- updateRawMatQty(beerReq, rawMatQty, beerChosen)
+  
+  return(
+    list(
+      tanks,
+      rawMatQty
+    )
+  )
 }

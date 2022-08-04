@@ -1,5 +1,8 @@
 
-
+#### DEMAND RELATED ####
+serveCustomers <- function() {
+  
+}
 satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, customerDemand) {
   lostBeerOrders <- getLostBeerList(beerInfo)
   
@@ -75,6 +78,8 @@ satisfyDemandAuto <- function(beerInfo, demand, beer, general, customerInfo, cus
   ))
 }
 
+
+#### DATABASE RELATED #### 
 generateTankDataToStore <- function(day, beer, beerInfo) {
   dayTankDF <- createTankStateDF()
   for (tank in beer$tanks[, "Tank"]) {
@@ -136,28 +141,54 @@ generateMaterialDataToStore <- function(day, material, materialInfo) {
   return(dayMatDF)
 }
 
-completeBeerInTank <- function(beer) {
+completeBeerInTank <- function(beer, AUTO) {
+  
   completeTanks <- which(beer$tanks$DaysInTank >= beer$tanks$daysToComplete)
   for (tank in completeTanks) {
     beerIdx <- which(beer$beerInv["name"] == beer$tanks[tank, "Beer"])
+    autoIdx <- which(AUTO$beerAuto["name"] == beer$tanks[tank, "Beer"])
+    
     beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] + beer$tanks[tank, "tankSize"]
     
     beer$tanks[tank, "Beer"] <- "Empty"
     beer$tanks[tank, "DaysInTank"] <- NA
     beer$tanks[tank, "daysToComplete"] <- NA
+    
+    ## Reset if it was brewed automatically
+    if(AUTO$beerAuto[autoIdx, "rebrew"]) {
+      AUTO$beerAuto[autoIdx, "rebrew"] <- F
+    }
+    
   }
-  return(beer)
+  return(
+    list(
+      beer,
+      AUTO
+    )
+  )
 }
 
-completeMaterialOrder <- function(material) {
+completeMaterialOrder <- function(material, AUTO) {
   completeOrders <- which(material$rawMatOrder$Days >= material$rawMatOrder$daysToComplete)
   for (order in completeOrders) {
     matIdx <- which(material$rawMatQty["name"] == material$rawMatOrder[order, "Material"])
+    autoIdx <- which(AUTO$materialAuto["name"] == material$rawMatOrder[order, "Material"])
+    
     material$rawMatQty[matIdx, "qty"] <- material$rawMatQty[matIdx, "qty"] + material$rawMatOrder[order, "Quantity"]
+    
+    ## Reset if it was ordered automatically
+    if(AUTO$materialAuto[autoIdx, "reorder"]) {
+      AUTO$materialAuto[autoIdx, "reorder"] <- F
+    }
   }
   if (! vector.is.empty(completeOrders) ){
     material$rawMatOrder <- material$rawMatOrder[-c(completeOrders),]
   }
   
-  return(material)
+  return(
+    list(
+      material,
+      AUTO
+    )
+  )
 }

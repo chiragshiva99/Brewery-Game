@@ -16,7 +16,7 @@ automateModuleUI <- function(id) {
   )
 }
 
-automateModuleServer <- function(id, AUTO, materialInfo, beerInfo) {
+automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -109,25 +109,54 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo) {
                      ),
                      tags$tbody(
                        lapply(1:nrow(materialInfo), function(i) {
-                         tags$tr(
-                           tags$td(style="width: 20%",
-                                   tags$em(materialInfo[i, "name"])
+                         matName <- materialInfo[i, "name"]
+                         
+                         div(
+                           tags$tr(
+                             tags$td(style="width: 20%", rowspan=2,
+                                     tags$em(materialInfo[i, "name"])
+                             ),
+                             tags$td(style="width: 60%", colspan=2,
+                                     htmlOutput(ns(paste0("supplier", matName)))
+                             ),
+                             tags$td(style="width: 20%", rowspan=2,
+                                     htmlOutput(ns(paste0("action", matName)))
+                                     
+                             )
                            ),
-                           tags$td(style="width: 30%",
-                                   htmlOutput(ns(paste0("reQty", materialInfo[i, "name"])))
-                           ),
-                           tags$td(style="width: 30%",
-                                   htmlOutput(ns(paste0("rePt", materialInfo[i, "name"])))
-                           ),
-                           tags$td(style="width: 20%",
-                                   htmlOutput(ns(paste0("action", materialInfo[i, "name"])))
-                             
+                           tags$tr(
+                             tags$td(style="width: 30%",
+                                     htmlOutput(ns(paste0("reQty", matName)))
+                             ),
+                             tags$td(style="width: 30%",
+                                     htmlOutput(ns(paste0("rePt", matName)))
+                             )
                            )
                          )
                        })
                      )
           )
         )
+      })
+      
+      lapply(1:nrow(materialInfo), function(i) {
+        output[[paste0("supplier", materialInfo[i, "name"])]] <- renderUI({
+          matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
+          
+          if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
+            supplierInfo <- costInfo %>% subset(materialName==materialInfo[i, "name"])
+            return(
+              selectInput(
+                ns(
+                paste0("supplier", materialInfo[i, "name"], "Input")), 
+                label=NULL, 
+                choices=supplierInfo[,"supplierName"]
+                )
+            )
+          } else {
+            return(AUTO$materialAuto[matIdx, "supplier"])
+          }
+        })
       })
       
       lapply(1:nrow(materialInfo), function(i) {
@@ -194,12 +223,16 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo) {
       })
       
       lapply(1:nrow(materialInfo), function(i) {
-        observeEvent(input[[paste0("submitVal", materialInfo[i, "name"])]], {
-          updateValMat[[paste0("material", materialInfo[i, "name"])]] <- F
+        matName <- materialInfo[i, "name"]
+        observeEvent(input[[paste0("submitVal", matName)]], {
+          updateValMat[[paste0("material", matName)]] <- F
           
-          matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
-          AUTO$materialAuto[matIdx, "reorderQuantity"] <- input[[paste0("reQty", materialInfo[i, "name"], "Input")]]
-          AUTO$materialAuto[matIdx, "reorderPoint"] <- input[[paste0("rePt", materialInfo[i, "name"], "Input")]]
+          matIdx <- which(AUTO$materialAuto$name == matName)
+          
+          AUTO$materialAuto[matIdx, "supplier"] <- input[[paste0("supplier", matName, "Input")]]
+          
+          AUTO$materialAuto[matIdx, "reorderQuantity"] <- input[[paste0("reQty", matName, "Input")]]
+          AUTO$materialAuto[matIdx, "reorderPoint"] <- input[[paste0("rePt", matName, "Input")]]
           
         })
       })

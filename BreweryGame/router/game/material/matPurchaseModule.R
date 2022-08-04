@@ -45,9 +45,7 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
       })
       
       observeEvent(input$purchaseok, {
-        newEntry <- data.frame(Material=input$matChosen, Quantity=input$purchQty, Days=0, Supplier=input$supplierChosen, daysToComplete=costInfo[which(costInfo$materialName == input$matChosen), "daysToComplete"])
-        material$rawMatOrder <- rbind(material$rawMatOrder, newEntry)
-        general$money <- general$money - calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        c(general, material) %<-% orderMaterial(general, material, costInfo, input$matChosen, input$purchQty, input$supplierChosen)
         removeModal()
       })
       

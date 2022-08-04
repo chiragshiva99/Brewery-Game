@@ -39,7 +39,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
       matPurchaseModuleServer("material", general, material, costInfo, disabled)
       beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled)
       customerDemandModuleServer("customer", demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO)
-      AUTO <- automateModuleServer("automate", AUTO, materialInfo, beerInfo)
+      AUTO <- automateModuleServer("automate", AUTO, materialInfo, beerInfo, costInfo)
       # allAuto <- automateModuleServer("automate", )
       return(AUTO)
     }

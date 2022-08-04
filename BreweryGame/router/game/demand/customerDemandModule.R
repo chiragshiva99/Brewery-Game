@@ -8,16 +8,33 @@ notEnoughModal <- function(ns) {
 customerDemandModuleUI <- function(id) {
   ns <- NS(id)
   div(
+    uiOutput(ns("autoSwitch")),
     uiOutput(ns("custDemand"))
   )
 
 }
 
-customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, customerInfo, customerDemand) {
+customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO) {
   moduleServer(
     id,
     function(input, output, session) {
       ns <- session$ns
+      
+      observeEvent(input$serveCustAuto, {
+        if(!is.null(input$serveCustAuto)) {
+          AUTO$serveCust <- input$serveCustAuto
+        }
+      })
+      
+      output$autoSwitch <- renderUI({
+        materialSwitch(
+          inputId = ns("serveCustAuto"),
+          label = "Auto Serve", 
+          value = AUTO$serveCust,
+          status = "success",
+          right=T
+        )
+      })
       
       output$custDemand <- renderUI({
         if(nrow(demand$dayDemand) == 0) {
@@ -83,8 +100,6 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
       })
       
       observe({
-        print("FRACTION")
-        print(demand$dayDemand[1,4]/demand$dayDemand[1, "maxWait"])
         if (nrow(demand$dayDemand)> 0) {
           res <- lapply(1:nrow(demand$dayDemand), function(i) {
             input[[paste0("custServe",rownames(demand$dayDemand)[i])]]
@@ -145,6 +160,8 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
           }
         }
       })
+      
+      return(AUTO)
     }
   )
 }

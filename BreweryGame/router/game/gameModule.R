@@ -12,14 +12,14 @@ source("router/game/actionModule.R")
 ### Action SubModules
 source("router/game/material/matPurchaseModule.R")
 source("router/game/beer/beerBrewModule.R")
-source("router/game/beer/beerStoreModule.R")
+source("router/game/demand/customerDemandModule.R")
+source("router/game/automate/automateModule.R")
 
 ## Progress Module
 source("router/game/progressModule.R")
 ### Progress SubModules
 source("router/game/material/matProgModule.R")
 source("router/game/beer/beerTankModule.R")
-source("router/game/demand/customerDemandModule.R")
 source("router/game/demand/totalDemandModule.R")
 
 source("router/game/material/materialHelper.R")
@@ -162,7 +162,7 @@ gameModuleServer <- function(id, USER) {
       beer <- reactiveValues(tanks=tanks, beerInv=beerInv)
       material <- reactiveValues(rawMatOrder=rawMatOrder, rawMatQty=rawMatQty)
       demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=lostPerBeer,   dayDemandDF=demandState)
-      AUTO <- reactiveValues(beerStore=F, serveCust=F)
+      AUTO <- reactiveValues(all=F, beerStore=F, serveCust=F, beer=F, material=F)
       
       # General
       ## Reset Game 
@@ -390,9 +390,9 @@ gameModuleServer <- function(id, USER) {
         disabled <- USER$finish
       })
       
-      AUTO <- actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO)
+      AUTO <- actionModuleServer("action", general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO, demand, customerInfo, customerDemand)
       
-      progressModuleServer("progress", material, beer, demand, general, beerInfo, customerInfo, customerDemand)
+      AUTO <- progressModuleServer("progress", material, beer, demand, general, beerInfo, customerInfo, customerDemand, tanks, AUTO)
       
       customerLostServer("customerLost", demand)
       

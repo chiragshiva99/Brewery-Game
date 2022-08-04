@@ -33,6 +33,8 @@ analysisModuleServer <- function(id, stateData) {
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
+      
       materialInfo <- getMaterialInfo()
       beerInfo <- getBeerInfo()
       customerInfo <- getCustomerInfo()

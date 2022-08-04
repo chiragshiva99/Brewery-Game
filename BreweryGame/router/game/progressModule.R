@@ -13,9 +13,14 @@ progressModuleUI <- function(id) {
       beerTankModuleUI(ns("beer"))
     ),
     tabPanel(
+      title="Total Demand",
+      totalDemandModuleUI(ns("totalDemand"))
+    ),
+    tabPanel(
       title="Demand",
       customerDemandModuleUI(ns("demand"))
     )
+
   )
 }
 
@@ -28,6 +33,7 @@ progressModuleServer <- function(id, material, beer, demand, general, beerInfo, 
       matProgModuleServer("material", material)
       beerTankModuleServer("beer", beer)
       customerDemandModuleServer("demand", demand, general, beer, beerInfo, customerInfo, customerDemand)
+      totalDemandModuleServer("totalDemand", demand, beerInfo, customerInfo)
       
     }
   )

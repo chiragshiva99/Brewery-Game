@@ -20,6 +20,7 @@ source("router/game/progressModule.R")
 source("router/game/material/matProgModule.R")
 source("router/game/beer/beerTankModule.R")
 source("router/game/demand/customerDemandModule.R")
+source("router/game/demand/totalDemandModule.R")
 
 source("router/game/material/materialHelper.R")
 

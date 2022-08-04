@@ -18,6 +18,17 @@ getFromTrackTable <- function(table, userID, gameID) {
   return(result)
 }
 
+#dark theme 
+darkTheme <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_size = 14) + 
+  theme(plot.title = element_text(family = "Fira Sans Condensed"),
+        plot.background = element_rect(fill = "grey25"),
+        panel.background = element_rect(fill = "grey15"),
+        panel.grid.major = element_line(color = "grey80", size = 0.5),
+        panel.grid.minor = element_line(color = "grey80", size = 0.5),
+        legend.background = element_rect(fill = "grey10"),
+        axis.ticks = element_blank(),
+        legend.key = element_blank())
+
 # --------------------------Money------------------------------
 money <- getFromTrackTable("cashTrack", 1, 20)
 
@@ -29,7 +40,7 @@ ggplot(data=money, mapping=aes(gameDay, cashBalance)) +
        x = "Game Day",
        y = "Cash Balance ($)"
   )+
-  dark_theme_gray()
+  darkTheme
 # ggplotly(a)
 
 # --------------------------Tank Status------------------------------
@@ -83,7 +94,7 @@ ggplot(data = visTank, mapping = aes(x= start, xend= end, y= group, color= Beer)
        x = "Game Day",
        y = "Tank No."
   ) +
-  dark_theme_gray()
+  darkTheme
 
 # --------------------------Beer Inventory------------------------------
 inventory <- getFromTrackTable("beerTrack", 1, 12)
@@ -97,7 +108,7 @@ ggplot(data=inventory, mapping=aes(gameDay, inventory, color=Beer)) +
        x = "Game Day",
        y = "Inventory"
   )+
-  dark_theme_gray()
+  darkTheme
 
 # --------------------------Beer Demand------------------------------
 demand <- getFromTrackTable("demandTrack", 1, 20)
@@ -111,7 +122,7 @@ ggplot(data=demand, mapping=aes(gameDay, quantity, color=Beer)) +
        x = "Number of Days",
        y = "Beer Quantity"
   )+
-  dark_theme_gray()
+  darkTheme
 
 # BarGraphs for each Respective Beer
 demandBeer1 <- subset(demand, demand$beerID==1)
@@ -124,21 +135,21 @@ ggplot(data=demandBeer1, mapping=aes(gameDay, quantity)) +
   labs(title="Demand for Beer 1", 
        x = "Game Day",
        y = "Beer Quantity"
-  )+dark_theme_gray()
+  )+darkTheme
 
 ggplot(data=demandBeer2, mapping=aes(gameDay, quantity, fill= Beer)) +
   geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#FAE96F") +
   labs(title="Demand for Beer 2", 
        x = "Game Day",
        y = "Beer Quantity"
-  )+dark_theme_gray()
+  )+darkTheme
 
 ggplot(data=demandBeer3, mapping=aes(gameDay, quantity, fill= Beer)) +
   geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#F6C101") +
   labs(title="Demand for Beer 3", 
        x = "Game Day",
        y = "Beer Quantity"
-  )+dark_theme_gray()
+  )+darkTheme
 
 # --------------------------Material Inventory Level------------------------------
 material <- getFromTrackTable("materialTrack", 1, 20)
@@ -150,8 +161,7 @@ ggplot(data=material, mapping=aes(gameDay, inventory, color=Material)) +
   labs(title="Raw Material Inventory Level", 
        x = "Game Day",
        y = "Inventory"
-  )+
-  dark_theme_gray()
+  ) + darkTheme
 
 
 

@@ -144,14 +144,24 @@ ggplot(data=demandBeer3, mapping=aes(gameDay, quantity, fill= Beer)) +
 material <- getFromTrackTable("materialTrack", 1, 20)
 material$Material <- ifelse(material$materialID==1, "Malt", ifelse(material$materialID==2, "Hops", "Yeast"))
 
+a <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_size = 14) + 
+    theme(plot.title = element_text(family = "Fira Sans Condensed"),
+          plot.background = element_rect(fill = "grey15"),
+          panel.background = element_rect(fill = "grey10"),
+          panel.grid.major = element_line(color = "grey50", size = 0.2),
+          panel.grid.minor = element_line(color = "grey50", size = 0.2),
+          legend.background = element_rect(fill = "grey10"),
+          axis.ticks = element_blank(),
+          legend.key = element_blank())
+
+
 ggplot(data=material, mapping=aes(gameDay, inventory, color=Material)) +
   geom_step(size = 1) +geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
   geom_text(mapping=aes(0, y = 100,label = "Recommended Raw-Material Reorder Point", vjust = 0, hjust = 0), color = 'white') +
   labs(title="Raw Material Inventory Level", 
        x = "Game Day",
        y = "Inventory"
-  )+
-  dark_theme_gray()
+  ) + a
 
 
 

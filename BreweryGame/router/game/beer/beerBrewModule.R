@@ -26,10 +26,9 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
       })
       
       observeEvent(input$brewBeer, {
-        
-        c(beer$tanks, material$rawMatQty) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty)
-        
-        removeModal()
+        c(tanks, rawMatQty) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty)
+        beer$tanks <- tanks
+        material$rawMatQty <- rawMatQty
       })
       
       observeEvent(disabled(), {

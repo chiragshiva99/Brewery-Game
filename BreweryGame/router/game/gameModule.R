@@ -62,14 +62,6 @@ gameModuleUI <- function(id, disabled=F) {
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            # column(width=3,
-            #     actionBttn(
-            #       inputId=ns("reset"), 
-            #       label="Reset Game",
-            #       style="minimal",
-            #       color="default"),
-            #     htmlOutput(ns("gameStatus"))
-            # ),
             bs4ValueBoxOutput(ns("day"), width=2),
             bs4ValueBoxOutput(ns("money"), width=2),
             column(width=5,

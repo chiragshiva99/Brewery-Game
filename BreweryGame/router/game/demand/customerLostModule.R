@@ -29,23 +29,36 @@ customerLostServer <- function(id, demand) {
         paste(demand$lostCust, "Customers Lost")
       })
       
-      output$lostSalesPerBeer <- renderTable({
-        select(demand$lostPerBeer, -stockOut) %>% rename(Beer=name, Quantity=lostQty)
+      output$lostSalesPerBeer <- renderUI({
+        beerCount <- nrow(demand$lostPerBeer)
+        
+        div(
+          tags$table(class="table table-sm",
+                     # style=""
+                     tags$thead(
+                       tags$tr(
+                         lapply(1:beerCount, function(i) {
+                           tags$th(
+                             style=paste0("width: ", round(100/beerCount, 2),"%"),
+                             demand$lostPerBeer[i, "name"]
+                           )
+                         })
+                       )
+                     ),
+                     tags$tbody(
+                       tags$tr(
+                         lapply(1:beerCount, function(i) {
+                           tags$td(
+                             style=paste0("width: ", round(100/beerCount, 2),"%"),
+                             demand$lostPerBeer[i, "lostQty"]
+                           )
+                         })
+                       )
+                     )
+           )
+        )
       })
-      # output$lostSales <- renderValueBox({
-      #   valueBox(
-      #     demand$lostCust,
-      #     "Customers Lost",
-      #     color="danger"
-      #   )
-      # })
-      # 
-      # output$lostSalesPerBeer <- renderInfoBox({
-      #   infoBox(
-      #     title="Lost Sales By Beer",
-      #     renderTable({select(demand$lostPerBeer, -stockOut) %>% rename(Beer=name, Quantity=lostQty)})
-      #   )
-      # })
+      
     }
   )
 }

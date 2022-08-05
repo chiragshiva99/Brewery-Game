@@ -72,7 +72,7 @@ checkUnsatisfiedCust <- function(general, demand, beer, beerInfo, customerInfo) 
   lostRev <- 0
   
   unsatisDemand <- which(demand$dayDemand$Day > demand$dayDemand$maxWait) 
-  print(unsatisDemand)
+  
   if(length(unsatisDemand) == 0) {
     return(list(
       general,
@@ -82,6 +82,7 @@ checkUnsatisfiedCust <- function(general, demand, beer, beerInfo, customerInfo) 
       lostBeerOrders
     ))
   }
+  
   for (i in 1:length(unsatisDemand)) {
     demandData <- list()
     uIdx <- unsatisDemand[i]
@@ -111,7 +112,6 @@ checkUnsatisfiedCust <- function(general, demand, beer, beerInfo, customerInfo) 
     demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
   }
   
-  print("UnsatisWorks")
   if (length(unsatisDemand) > 0){
     demand$dayDemand <- demand$dayDemand[-unsatisDemand,]
     demand$lostCust <- demand$lostCust + length(unsatisDemand)
@@ -236,6 +236,203 @@ completeMaterialOrder <- function(material, AUTO) {
     list(
       material,
       AUTO
+    )
+  )
+}
+
+advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, demand, INIT) {
+  ## Store seed if game started
+  if(general$day == 1) {
+    print(paste("SEED:", INIT$seed))
+    updateSeed(USER$id, USER$gameID, INIT$seed)
+  }
+  
+  ## If Auto Serve Customers
+  if (AUTO$serveCust | AUTO$all) {
+    c(general, demand, beer) %<-% satisfyDemandAuto(general, demand, beer, INIT$beerInfo, INIT$customerInfo, INIT$customerDemand)
+  } 
+  
+  # Progress day for demand to identify unsatisfied demand
+  demand$dayDemand$Day <- demand$dayDemand$Day + 1
+  
+  ## Check for unsatisfied customers and remove them
+  c(general, demand, beer, lostRev, lostBeerOrders) %<-% checkUnsatisfiedCust(general, demand, beer, INIT$beerInfo, INIT$customerInfo)
+  
+  ## Store all relevant data
+  ## Add demand Data to DB if necessary
+  if(nrow(demand$dayDemandDF) > 0) {
+    demand$dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(demand$dayDemandDF)),demand$dayDemandDF)
+    addToTable("demandTrack", demand$dayDemandDF)
+  }
+  
+  day <- general$day
+  
+  ## UPDATE STATES TO DATABASE
+  dayCashDF <- INIT$cashState
+  
+  ## Get interest
+  general$money <- general$money * (1 + (INIT$interestRate/365))
+  
+  # Store Cash Statuses
+  data <- list()
+  data$gameDay <- day
+  data$cashBalance <- general$money
+  data$revenue <- general$dayRevenue
+  data$lostRev <- lostRev
+  
+  dayCashDF <- rbind(dayCashDF, data)
+  dayCashDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayCashDF)), dayCashDF)
+  
+  addToTable("cashTrack", dayCashDF)
+  
+  # Store Tank Levels
+  
+  dayTankDF <- generateTankDataToStore(day, beer, INIT$beerInfo)
+  
+  if(nrow(dayTankDF) > 0) {
+    dayTankDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayTankDF)), dayTankDF)
+    print(dayTankDF)
+    addToTable("tankTrack", dayTankDF)
+  }
+  
+  #Store inventory levels of Beer
+  
+  dayBeerDF <- generateBeerDataToStore(day, beer, INIT$beerInfo, lostBeerOrders)
+  
+  dayBeerDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayBeerDF)), dayBeerDF)
+  addToTable("beerTrack", dayBeerDF)
+  
+  # Store Material Data
+  dayMatDF <- generateMaterialDataToStore(day, material, INIT$materialInfo)
+  
+  dayMatDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayMatDF)), dayMatDF)
+  addToTable("materialTrack", dayMatDF)
+  
+  ## Add all to gameStateData
+  gameStateData$beer <- addToGameState(gameStateData$beer, dayBeerDF)
+  gameStateData$mat <- addToGameState(gameStateData$mat, dayMatDF)
+  gameStateData$demand <- addToGameState(gameStateData$demand, demand$dayDemandDF)
+  gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
+  gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
+  
+  if(general$day == INIT$endDays) {
+    updateCashBalance(USER$id, USER$gameID, general$money)
+    showModal(endGameModal(session))
+  }
+  
+  ## Resetting reactive Values
+  demand$dayDemandDF <- INIT$demandState
+  general$dayRevenue <- 0
+  
+  #### START OF DAY n+1 ####
+  
+  ## Advance game as required
+  
+  general$day <- general$day + 1
+  
+  ## Increase the number of days for tanks and Order
+  beer$tanks$DaysInTank <- beer$tanks$DaysInTank + 1
+  material$rawMatOrder$Days <- material$rawMatOrder$Days + 1
+  
+  # Add New Demand
+  ## Update the demand of system
+  if(nrow(demand$dayDemand) > 0) {
+    print(paste("updating demand for day", general$day))
+  }
+  
+  newDemand <- subset(INIT$totalDemand, arrivalDay==general$day)
+  if (nrow(newDemand) > 0) {
+    demand$dayDemand <- rbind(demand$dayDemand, newDemand)
+  }
+  
+  ## Complete Tank Orders if automated
+  if (AUTO$beerStore | AUTO$all) {
+    c(beer, AUTO) %<-% completeBeerInTank(beer, AUTO)
+  }
+  
+  ## IF auto brew
+  ## BREW BEER WHERE IT IS BELOW REORDER QUANTITY
+  if (AUTO$beer | AUTO$all) {
+    # Check empty tanks
+    emptyTanks <- subset(beer$tanks, Beer == "Empty")
+    
+    # If none Go to next day
+    if(nrow(emptyTanks) > 0) {
+      # If tanks are empty
+      beerOrder <- sample(INIT$beerInfo[, "name"])
+      tankOrder <- sample(emptyTanks[,"Tank"])
+      # Check if any beers are below reorder quantity
+      tankChoice <- 1
+      for (i in 1:length(beerOrder)) {
+        beerName <- beerOrder[i]
+        beerIdx <- which(beer$beerInv$name == beerName)
+        beerAutoIdx <- which(AUTO$beerAuto$name == beerName)
+        beerCurInv <- beer$beerInv[beerIdx, "qty"]
+        beerReorderPoint <- AUTO$beerAuto[beerAutoIdx, "reorderPoint"]
+        
+        if ((beerCurInv <= beerReorderPoint) & (!AUTO$beerAuto[beerAutoIdx, "rebrew"])) {
+          tankChosen <- tankOrder[tankChoice]
+          
+          # rebrew if possible
+          c(beer$tanks, material$rawMatQty) %<-% brewBeer(beer$tanks, tankChosen, beerName, INIT$beerInfo, INIT$beerReq, material$rawMatQty)
+          
+          # Prevent further rebrew 
+          AUTO$beerAuto[beerAutoIdx, "rebrew"] <- T
+          
+          tankChoice <- tankChoice + 1
+        }
+      }
+    }
+  }
+  
+  
+  ## Add completed Raw Material Orders
+  c(material, AUTO) %<-% completeMaterialOrder(material, AUTO)
+  
+  ## IF auto order
+  ## ORDER MATERIALS IF BELOW REORDER QUANTITY
+  print("Check on AUTO")
+  print(AUTO$material)
+  print(AUTO$all)
+  if (AUTO$material | AUTO$all) {
+    for (i in 1:nrow(material$rawMatQty)) {
+      matName <- material$rawMatQty[i, "name"]
+      matCurInv <- material$rawMatQty[i, "qty"]
+      matAutoIdx <- which(AUTO$materialAuto$name == matName)
+      matReorderPoint <- AUTO$materialAuto[matAutoIdx, "reorderPoint"]
+      print(matName)
+      print(matCurInv)
+      print(matReorderPoint)
+      if ((matCurInv <= matReorderPoint) & (!AUTO$materialAuto[matAutoIdx, "reorder"])) {
+        matReorderQuantity <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "reorderQuantity"]
+        matReorderSupplier <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "supplier"]
+        print(matReorderSupplier)
+        # Function does not order if not enough money
+        c(general, material) %<-% orderMaterial(general, material, INIT$costInfo, matName, matReorderQuantity, matReorderSupplier)
+        
+        # Prevent Reorder (notes that reorder is in progress)
+        AUTO$materialAuto[matAutoIdx, "reorder"] <- T
+      }
+    }
+  }
+  
+  # End game if User is finished
+  if (general$day > INIT$endDays) {
+    USER$finish <- T
+    USER$gameID <- -1
+    ### update end of game
+    result <- updateGameID(USER$id, USER$gameID)
+  }
+  
+  return(
+    list(
+      USER, 
+      AUTO,
+      gameStateData,
+      general, 
+      beer, 
+      material, 
+      demand
     )
   )
 }

@@ -7,6 +7,13 @@ getBaseData <- function(gameID, id, rowCount) {
   df
 }
 
+initRawMatOrder <- function() {
+  rawMatOrder <- data.frame(matrix(nrow=0, ncol=5))
+  colnames(rawMatOrder) <- c("Material", "Quantity", "Days", "Supplier", "daysToComplete")
+  
+  return(rawMatOrder)
+}
+
 createCashStateDF <- function() {
   stateData <- data.frame(matrix(nrow=0, ncol=4))
   colnames(stateData) <- c("gameDay", "cashBalance", "revenue", "lostRev")

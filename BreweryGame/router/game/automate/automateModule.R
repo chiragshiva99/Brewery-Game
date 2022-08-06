@@ -31,16 +31,39 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       updateValMat <- reactiveValues()
       updateValBeer <- reactiveValues()
       
+      tempMatQ <- reactiveValues()
+      tempMatR <- reactiveValues()
+      tempMatS <- reactiveValues()
+      
+      tempBeerR <- reactiveValues()
+      
       for (i in 1:nrow(materialInfo)) {
         updateValMat[[paste0("material", materialInfo[i, "name"])]] <- T
+        tempMatQ[[paste0("material", materialInfo[i, "name"])]] <- 0
+        tempMatR[[paste0("material", materialInfo[i, "name"])]] <- 0
+        tempMatS[[paste0("material", materialInfo[i, "name"])]] <- NA
       }
       
       for (i in 1:nrow(beerInfo)) {
         updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- T
+        tempBeerR[[paste0("beer", beerInfo[i, "name"])]] <- 0
       }
       
       observeEvent(input$allAuto, {
         if(!is.null(input$allAuto)) {
+          matLogical <- createLogicalList(updateValMat, materialInfo, "material")
+          beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
+          if(any(matLogical == T) | any(beerLogical == T)) {
+            AUTO$all <- F
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Parameters not set for Automation!",
+                type = "warning"
+              )
+            )
+          }
+          
           AUTO$all <- input$allAuto
           AUTO$material <- input$allAuto
           AUTO$beer <- input$allAuto
@@ -59,6 +82,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       })
       
       output$autoSwitch <- renderUI({
+        click <- input$allAuto
         materialSwitch(
           inputId = ns("allAuto"),
           label = "Automate All", 
@@ -70,33 +94,54 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       observeEvent(input$materialAuto, {
         if(!is.null(input$materialAuto)) {
+          print(length(updateValMat))
+          matLogical <- createLogicalList(updateValMat, materialInfo, "material")
+          if(any(matLogical == T)) {
+            AUTO$material <- F
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Parameters not set for Automation!",
+                type = "error"
+              )
+            )
+          }
           AUTO$material <- input$materialAuto
         }
-        selected$tab <- "Automate"
       })
       
       observeEvent(input$beerAuto, {
         if(!is.null(input$beerAuto)) {
+          beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
+          if(any(beerLogical == T)) {
+            AUTO$beer <- F
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Parameters not set for Automation!",
+                type = "error"
+              )
+            )
+          }
+          
           AUTO$beer <- input$beerAuto
         }
-        selected$tab <- "Automate"
       })
       
       observeEvent(input$serveAuto, {
         if(!is.null(input$serveAuto)) {
           AUTO$serveCust <- input$serveAuto
         }
-        selected$tab <- "Automate"
       })
       
       observeEvent(input$storeAuto, {
         if(!is.null(input$storeAuto)) {
           AUTO$beerStore <- input$storeAuto
         }
-        selected$tab <- "Automate"
       })
       
       output$autoMaterial <- renderUI({
+        click <- input$materialAuto
         materialSwitch(
           inputId = ns("materialAuto"),
           label = "Auto Material Order", 
@@ -107,6 +152,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       })
       
       output$autoBeer <- renderUI({
+        click <- input$beerAuto
         materialSwitch(
           inputId = ns("beerAuto"),
           label = "Auto Brewing", 
@@ -191,9 +237,15 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
           if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
             supplierInfo <- costInfo %>% subset(materialName==materialInfo[i, "name"])
             names <- c("Choose a Supplier" = "", supplierInfo[, "supplierName"])
+
+            if(!is.na(AUTO$materialAuto[matIdx, "supplier"])) {
+              supplierChosen <- AUTO$materialAuto[matIdx, "supplier"]
+            } else if (!is.na(tempMatS[[paste0("material", materialInfo[i, "name"])]])) {
+              supplierChosen <- tempMatS[[paste0("material", materialInfo[i, "name"])]]
+            } else {
+              supplierChosen <- ""
+            }
             
-            supplierChosen <- ifelse(!is.na(AUTO$materialAuto[matIdx, "supplier"]), AUTO$materialAuto[matIdx, "supplier"], "")
-            print(supplierChosen)
             return(
               selectInput(
                 ns(
@@ -213,11 +265,19 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
         output[[paste0("reQty", materialInfo[i, "name"])]] <- renderUI({
           matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
           
+          if(AUTO$materialAuto[matIdx, "reorderQuantity"] != 0) {
+            curValue <- AUTO$materialAuto[matIdx, "reorderQuantity"]
+          } else if (tempMatQ[[paste0("material", materialInfo[i, "name"])]] != 0) {
+            curValue <- tempMatQ[[paste0("material", materialInfo[i, "name"])]]
+          } else {
+            curValue <- 0
+          }
+          
           if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
             return(numericInput(
               ns(paste0("reQty", materialInfo[i, "name"], "Input")),
               label=NULL,
-              value=AUTO$materialAuto[matIdx, "reorderQuantity"], min=1, step=1
+              value=curValue, min=1, step=1
             )
             )
           } else {
@@ -231,10 +291,19 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
           matIdx <- which(AUTO$materialAuto$name == materialInfo[i, "name"])
           
           if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
+            
+            if(AUTO$materialAuto[matIdx, "reorderPoint"] != 0) {
+              curValue <- AUTO$materialAuto[matIdx, "reorderPoint"]
+            } else if (tempMatR[[paste0("material", materialInfo[i, "name"])]] != 0) {
+              curValue <- tempMatR[[paste0("material", materialInfo[i, "name"])]]
+            } else {
+              curValue <- 0
+            }
+            
             return(numericInput(
               ns(paste0("rePt", materialInfo[i, "name"], "Input")),
               label=NULL,
-              value=AUTO$materialAuto[matIdx, "reorderPoint"], min=1, step=1
+              value=curValue, min=1, step=1
             )
             )
           } else {
@@ -275,7 +344,8 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       lapply(1:nrow(materialInfo), function(i) {
         matName <- materialInfo[i, "name"]
         observeEvent(input[[paste0("submitVal", matName)]], {
-          selected$tab <- "Automate"
+          c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
+          
           if(input[[paste0("supplier", matName, "Input")]] == "") {
             return(
             sendSweetAlert(
@@ -295,12 +365,22 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
           AUTO$materialAuto[matIdx, "reorderQuantity"] <- input[[paste0("reQty", matName, "Input")]]
           AUTO$materialAuto[matIdx, "reorderPoint"] <- input[[paste0("rePt", matName, "Input")]]
           
+          if(AUTO$materialAuto[matIdx, "reorderQuantity"] == 0) {
+            sendSweetAlert(
+              session = session,
+              title = "Material will not be reordered",
+              text = "Reorder Quantity set to 0",
+              type = "info"
+            )
+          }
+          
         })
       })
       
       lapply(1:nrow(materialInfo), function(i) {
         observeEvent(input[[paste0("updateVal", materialInfo[i, "name"])]], {
-          selected$tab <- "Automate"
+          c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
+          
           updateValMat[[paste0("material", materialInfo[i, "name"])]] <- T
         })
       })
@@ -343,10 +423,19 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
           beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
           
           if(updateValBeer[[paste0("beer", beerInfo[i, "name"])]]) {
+            
+            if(AUTO$beerAuto[beerIdx, "reorderPoint"] != 0) {
+              curValue <- AUTO$beerAuto[beerIdx, "reorderPoint"]
+            } else if (tempBeerR[[paste0("beer", beerInfo[i, "name"])]] != 0) {
+              curValue <- tempBeerR[[paste0("beer", beerInfo[i, "name"])]]
+            } else {
+              curValue <- 0
+            }
+            
             return(numericInput(
               ns(paste0("rePt", beerInfo[i, "name"], "Input")),
               label=NULL,
-              value=AUTO$beerAuto[beerIdx, "reorderPoint"], min=1, step=1
+              value=curValue, min=1, step=1
             )
             )
           } else {
@@ -386,19 +475,22 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       lapply(1:nrow(beerInfo), function(i) {
         observeEvent(input[[paste0("submitVal", beerInfo[i, "name"])]], {
-          selected$tab <- "Automate"
+          c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
+          
           updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- F
           
           beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
 
           AUTO$beerAuto[beerIdx, "reorderPoint"] <- input[[paste0("rePt", beerInfo[i, "name"], "Input")]]
           
+          
         })
       })
       
       lapply(1:nrow(beerInfo), function(i) {
         observeEvent(input[[paste0("updateVal", beerInfo[i, "name"])]], {
-          selected$tab <- "Automate"
+          c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
+          
           updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- T
         })
       })

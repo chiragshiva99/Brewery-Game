@@ -14,6 +14,7 @@ source("router/game/material/matPurchaseModule.R")
 source("router/game/beer/beerBrewModule.R")
 source("router/game/demand/customerDemandModule.R")
 source("router/game/automate/automateModule.R")
+source("router/game/automate/automateHelper.R")
 
 ## Progress Module
 source("router/game/progressModule.R")

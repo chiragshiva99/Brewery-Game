@@ -420,9 +420,13 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
       matCurInv <- material$rawMatQty[i, "qty"]
       matAutoIdx <- which(AUTO$materialAuto$name == matName)
       matReorderPoint <- AUTO$materialAuto[matAutoIdx, "reorderPoint"]
-
+      matReorderQuantity <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "reorderQuantity"]
+      
+      if(matReorderQuantity == 0) {
+        next
+      }
+      
       if ((matCurInv <= matReorderPoint) & (!AUTO$materialAuto[matAutoIdx, "reorder"])) {
-        matReorderQuantity <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "reorderQuantity"]
         matReorderSupplier <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "supplier"]
         # Function does not order if not enough money
         c(general, material) %<-% orderMaterial(general, material, INIT$costInfo, matName, matReorderQuantity, matReorderSupplier)

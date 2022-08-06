@@ -61,15 +61,15 @@ endGameModal <- function(session) {
 
 gameModuleUI <- function(id, disabled=F) {
   ns <- NS(id)
-  tabItem(tabName ="gameTab", class = "active",
+  tabItem(tabName ="game", class = "active",
           # Application title
           fluidRow(
-            column(width=1,
+            column(width=2,
                    bs4ValueBoxOutput(ns("day"), width=12),
                    br()
                    ),
-            bs4ValueBoxOutput(ns("money"), width=3),
-            column(width=3,
+            bs4ValueBoxOutput(ns("money"), width=2),
+            column(width=2,
                    customerLostUI(ns("customerLost"))
                    ),
             bs4ValueBoxOutput(ns("actionCounter"), width=2),
@@ -158,7 +158,7 @@ gameModuleServer <- function(id, USER) {
       ## Info params
       output$money <- renderbs4ValueBox({
         bs4ValueBox(
-          h1(paste("$", format(general$money, nsmall=2))), 
+          h2(paste("$", format(general$money, nsmall=2))), 
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",

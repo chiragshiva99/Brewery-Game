@@ -162,25 +162,11 @@ routerModuleServer <- function(id) {
       output$sidebarpanel <- renderUI({
         sidebarMenuItems <- list()
         counter <- 0
-        if(USER$login == T) {
-          counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("user"))
-        }
         
-        if (USER$gameStart == T) {
-          counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("Main Page", tabName = "gameTab", icon = icon("gamepad"))
-        }
-        
-        if ((USER$finish == T | USER$finish == F) & USER$gameStart == T) {
-          counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
-        }
-        
-        if (USER$gameStart == T) {
-          counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("Leaderboard", tabName = "leaderTab", icon = icon("star"))
-        }
+        sidebarMenuItems[[1]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("user"))
+        sidebarMenuItems[[2]] <- menuItem("Main Page", tabName = "game", icon = icon("gamepad"))
+        sidebarMenuItems[[3]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
+        sidebarMenuItems[[4]] <- menuItem("Leaderboard", tabName = "leaderTab", icon = icon("star"))
         
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })

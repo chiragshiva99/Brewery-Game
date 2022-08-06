@@ -75,14 +75,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
                            demand$dayDemand[i, 4]
                     ),
                     tags$td(style="width: 20%",
-                           actionBttn(
-                             inputId=ns(paste0("custServe",rownames(demand$dayDemand)[i])),
-                             label="Serve",
-                             style="fill",
-                             color="warning",
-                             size="xs",
-                             block=T
-                           )
+                            htmlOutput(ns(paste0("button", rownames(demand$dayDemand)[i])))
                     )
                   ),
                   tags$tr(
@@ -100,45 +93,69 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
       })
       
       observe({
-        
-        if (nrow(demand$dayDemand)> 0) {
-          res <- lapply(1:nrow(demand$dayDemand), function(i) {
-            input[[paste0("custServe",rownames(demand$dayDemand)[i])]]
-          })
-        } else {
-          res <- list()
-        }
-        served <- c()
-        if(length(res) > 0) {
-          for(i in 1:length(res)) {
-            if(!is.null(res[[i]])) {
-              if(res[[i]] > 0) {
-                served <- c(served, i)
+        if(nrow(demand$dayDemand) > 0) {
+          lapply(1:nrow(demand$dayDemand), function(i) {
+            output[[paste0("button", rownames(demand$dayDemand)[i])]] <- renderUI({
+              beerType <- demand$dayDemand[i, "Beer"]
+              qty <- demand$dayDemand[i, "Quantity"]
+              beerIdx <- which(beer$beerInv$name == beerType)
+              curBeerInv <- beer$beerInv[beerIdx,"qty"]
+              
+              if(is.na(qty)) {
+                return()
               }
-            } 
-          }
+              
+              if(identical(numeric(0), curBeerInv)) {
+                return()
+              }
+              if(qty <= curBeerInv) {
+                return(
+                  actionBttn(
+                    inputId=ns(paste0("custServe",rownames(demand$dayDemand)[i])),
+                    label="Serve",
+                    style="fill",
+                    color="warning",
+                    size="xs",
+                    block=T
+                  )
+                )
+              } else {
+                return()
+              }
+            })
+          })
         }
-
-        if(length(served) > 0) {
-          selected$tab <- "Serve Customers"
-          for(i in served) {
-            # Satisfied?
-            demandData <- list()
-            c(addToDB, demandData, general, demand, beer) %<-% serveCustomer(i, general, demand, beer, beerInfo, customerInfo, customerDemand)
-            
-            # Remove
-
-            
-            ## Add to dayDemandDF
-            if(addToDB) {
-              demand$dayDemand <- demand$dayDemand[-c(i),]
-              demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
-            } else {
-              showModal(notEnoughModal(ns))
-            }
-            print(demand$dayDemand)
-          }
-        }
+      })
+      
+      observe({
+        if (nrow(demand$dayDemand)> 0) {
+          lapply(1:nrow(demand$dayDemand), function(i) {
+            observeEvent(input[[paste0("custServe",rownames(demand$dayDemand)[i])]], {
+              selected$tab <- "Serve Customers"
+              
+              # Satisfied?
+              demandData <- list()
+              c(addToDB, demandData, general, demand, beer) %<-% serveCustomer(i, general, demand, beer, beerInfo, customerInfo, customerDemand)
+              
+              # Remove
+              
+              
+              ## Add to dayDemandDF
+              if(addToDB) {
+                demand$dayDemand <- demand$dayDemand[-c(i),]
+                demand$dayDemandDF <- rbind(demand$dayDemandDF, demandData)
+              } else {
+                return(
+                  sendSweetAlert(
+                    session = session,
+                    title = "Not Enough Beer",
+                    type = "error"
+                  )
+                )
+              }
+            })
+          })
+        } 
       })
       
       return(AUTO)

@@ -51,17 +51,19 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       observeEvent(input$allAuto, {
         if(!is.null(input$allAuto)) {
-          matLogical <- createLogicalList(updateValMat, materialInfo, "material")
-          beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
-          if(any(matLogical == T) | any(beerLogical == T)) {
-            AUTO$all <- F
-            return(
-              sendSweetAlert(
-                session = session,
-                title = "Parameters not set for Automation!",
-                type = "warning"
+          if(input$allAuto) {
+            matLogical <- createLogicalList(updateValMat, materialInfo, "material")
+            beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
+            if(any(matLogical == T) | any(beerLogical == T)) {
+              AUTO$all <- F
+              return(
+                sendSweetAlert(
+                  session = session,
+                  title = "Parameters not set for Automation!",
+                  type = "warning"
+                )
               )
-            )
+            }
           }
           
           AUTO$all <- input$allAuto
@@ -94,17 +96,18 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       observeEvent(input$materialAuto, {
         if(!is.null(input$materialAuto)) {
-          print(length(updateValMat))
-          matLogical <- createLogicalList(updateValMat, materialInfo, "material")
-          if(any(matLogical == T)) {
-            AUTO$material <- F
-            return(
-              sendSweetAlert(
-                session = session,
-                title = "Parameters not set for Automation!",
-                type = "error"
+          if(input$materialAuto) {
+            matLogical <- createLogicalList(updateValMat, materialInfo, "material")
+            if(any(matLogical == T)) {
+              AUTO$material <- F
+              return(
+                sendSweetAlert(
+                  session = session,
+                  title = "Parameters not set for Automation!",
+                  type = "error"
+                )
               )
-            )
+            }
           }
           AUTO$material <- input$materialAuto
         }
@@ -112,16 +115,18 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       observeEvent(input$beerAuto, {
         if(!is.null(input$beerAuto)) {
-          beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
-          if(any(beerLogical == T)) {
-            AUTO$beer <- F
-            return(
-              sendSweetAlert(
-                session = session,
-                title = "Parameters not set for Automation!",
-                type = "error"
+          if(input$beerAuto) {
+            beerLogical <- createLogicalList(updateValBeer, beerInfo, "beer")
+            if(any(beerLogical == T)) {
+              AUTO$beer <- F
+              return(
+                sendSweetAlert(
+                  session = session,
+                  title = "Parameters not set for Automation!",
+                  type = "error"
+                )
               )
-            )
+            }
           }
           
           AUTO$beer <- input$beerAuto
@@ -346,7 +351,11 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
         observeEvent(input[[paste0("submitVal", matName)]], {
           c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
           
-          if(input[[paste0("supplier", matName, "Input")]] == "") {
+          supChosen <- input[[paste0("supplier", matName, "Input")]]
+          reQty <- input[[paste0("reQty", matName, "Input")]]
+          rePt <- input[[paste0("rePt", matName, "Input")]]
+          
+          if(supChosen == "") {
             return(
             sendSweetAlert(
               session = session,
@@ -356,16 +365,46 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
             ))
           }
           
+          if(as.integer(reQty) != reQty) {
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Set an Integer Value for Reorder Quantity",
+                text = NULL,
+                type = "warning"
+              ))
+          }
+          
+          if(as.integer(rePt) != rePt) {
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Set an Integer Value for Reorder Point",
+                text = NULL,
+                type = "warning"
+              ))
+          }
+          
+          if(rePt < 0 | reQty < 0) {
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Can't Set a Negative Value",
+                text = NULL,
+                type = "warning"
+              ))
+          }
+          
           updateValMat[[paste0("material", matName)]] <- F
           
           matIdx <- which(AUTO$materialAuto$name == matName)
           
-          AUTO$materialAuto[matIdx, "supplier"] <- input[[paste0("supplier", matName, "Input")]]
+          AUTO$materialAuto[matIdx, "supplier"] <- supChosen
           
-          AUTO$materialAuto[matIdx, "reorderQuantity"] <- input[[paste0("reQty", matName, "Input")]]
-          AUTO$materialAuto[matIdx, "reorderPoint"] <- input[[paste0("rePt", matName, "Input")]]
+          AUTO$materialAuto[matIdx, "reorderQuantity"] <- reQty
+          AUTO$materialAuto[matIdx, "reorderPoint"] <- rePt
           
-          if(AUTO$materialAuto[matIdx, "reorderQuantity"] == 0) {
+          if(reQty == 0) {
             sendSweetAlert(
               session = session,
               title = "Material will not be reordered",
@@ -387,7 +426,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       output$beerInput <- renderUI({
         div(
-          tags$table(class="table table-striped table-sm",
+          tags$table(class="table table-sm",
                      tags$thead(
                        tags$tr(
                          tags$th(style="width: 20%",
@@ -477,11 +516,33 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
         observeEvent(input[[paste0("submitVal", beerInfo[i, "name"])]], {
           c(tempMatQ, tempMatR, tempMatS, tempBeerR) %<-% updateTemp(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR)
           
+          rePt <- input[[paste0("rePt", beerInfo[i, "name"], "Input")]]
+          
+          if(as.integer(rePt) != rePt) {
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Set an Integer Value for Reorder Point",
+                text = NULL,
+                type = "warning"
+              ))
+          }
+          
+          if(rePt < 0) {
+            return(
+              sendSweetAlert(
+                session = session,
+                title = "Can't Set a Negative Value",
+                text = NULL,
+                type = "warning"
+              ))
+          }
+          
           updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- F
           
           beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
 
-          AUTO$beerAuto[beerIdx, "reorderPoint"] <- input[[paste0("rePt", beerInfo[i, "name"], "Input")]]
+          AUTO$beerAuto[beerIdx, "reorderPoint"] <- rePt
           
           
         })

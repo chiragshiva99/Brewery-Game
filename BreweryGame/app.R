@@ -15,7 +15,7 @@
 # without giving them access to your personal AWS database.
 
 source("usePackages.R")
-pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","bs4Dash", "shinyauthr", "DT", "sodium", "shinyBS", "plotly", "shinyWidgets", "zeallot", "ggalt", "fresh", "ggdark")
+pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","bs4Dash", "shinyauthr", "sodium", "shinyBS", "plotly", "shinyWidgets", "zeallot", "ggalt", "fresh", "ggdark")
 loadPkgs(pkgnames)
 
 

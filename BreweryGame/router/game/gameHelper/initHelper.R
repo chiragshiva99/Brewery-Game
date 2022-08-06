@@ -18,6 +18,10 @@ initGameArgs <- function(INIT) {
   # INIT$rawMatQty[1, "qty"] <- 0
   # INIT$rawMatQty[2, "qty"] <- 0
   
+  ## Testing
+  # INIT$beerInv[1, "qty"] <- 0
+  # INIT$beerInv[2, "qty"] <- 0
+  
   INIT$beerReq <- getBeerReq()
   
   INIT$costInfo <- getMaterialCost()

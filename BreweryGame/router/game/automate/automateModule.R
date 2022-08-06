@@ -189,7 +189,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
       
       output$materialInput <- renderUI({
         div(
-          tags$table(class="table table-striped table-sm",
+          tags$table(class="table table-sm",
                      tags$thead(
                        tags$tr(
                          tags$th(style="width: 20%",

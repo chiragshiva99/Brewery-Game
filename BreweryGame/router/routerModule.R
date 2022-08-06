@@ -54,15 +54,15 @@ routerModuleUI <- function(id) {
 
       
       header = dashboardHeader(
-        h3("Beer-field Technologies"),
+        h3("Beer-field Technologies", style="color:#ffffff"),
         title = dashboardBrand(
           title = "The Brewery Game",
           color = "primary",
           href = "www",
           image = "BeerBoys.jpg",
         ),
-        skin = "dark",
-        status = "light",
+        skin = "light",
+        status = "dark",
         border = TRUE,
         sidebarIcon = icon("bars"),
         # controlbarIcon = icon("th"),

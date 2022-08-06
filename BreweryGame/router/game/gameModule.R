@@ -69,7 +69,7 @@ gameModuleUI <- function(id, disabled=F) {
                    br()
                    ),
             bs4ValueBoxOutput(ns("money"), width=2),
-            column(width=2,
+            column(width=3,
                    customerLostUI(ns("customerLost"))
                    ),
             bs4ValueBoxOutput(ns("actionCounter"), width=2),

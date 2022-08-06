@@ -58,6 +58,8 @@ updateGameID <- function(userID, gameID) {
   query <- sqlInterpolate(conn, queryTemplate, id1=gameID, id2=userID)
   result <- dbExecute(conn, query)
   
+  dbDisconnect(conn)
+  
   result
 }
 

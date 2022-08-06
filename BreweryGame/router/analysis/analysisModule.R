@@ -21,12 +21,12 @@ analysisModuleUI <- function(id) {
         plotlyOutput(ns("beerPlot"))
       ),
       box(
-        title=radioButtons("radio",
-                           label = HTML('<h1">Beer Demand</h1>'),
-                           choices = list("Total Demand" = 1, "IPA" = 2, "Lager" = 3, "Stout" = 4),
-                           selected = 1,
-                           inline = T,
-                           width = "100%"),
+        title="Beer Demand",
+        selectInput("beer", "Beer:",
+                    c("Total Demand" = "Total",
+                      "IPA" = "IPA",
+                      "Lager" = "Lager",
+                      "Stout" = "Stout")),
         plotlyOutput(ns("demandPlot"))
       ),
       box(
@@ -119,12 +119,9 @@ analysisModuleServer <- function(id, stateData) {
           )+darkTheme
         
         ggplotly(p1)
-        # ggplotly(p2)
-        # ggplotly(p3)
-        # ggplotly(p4)
-        # if(input$radio == 1){ggplotly(p1)}
-        # else{ggplotly(p1)}
-        
+        # if (input$Beer == "Total") {return(ggplotly(p1))}
+        # if (input$Beer == "IPA") {return(ggplotly(p2))}
+        # else {return(ggplotly(p1))}
       })
       
       output$lostPlot <- renderPlotly({

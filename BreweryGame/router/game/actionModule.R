@@ -13,6 +13,8 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
     function(input, output, session) {
       ns <- session$ns
       
+      selected <- reactiveValues(tab=NULL)
+      
       output$actionTab <- renderUI({
 
         actionTabs <- list()
@@ -37,13 +39,13 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
           automateModuleUI(ns("automate"))
         )
 
-        return(tabBox(id=ns("action"), width=NULL, collapsible=F, solidHeader=TRUE,status="maroon", .list=actionTabs))
+        return(tabBox(id=ns("action"), width=NULL, collapsible=F, solidHeader=TRUE,status="maroon", .list=actionTabs, selected=selected$tab))
       })
       
-      matPurchaseModuleServer("material", general, material, costInfo, disabled)
-      beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled, general)
-      customerDemandModuleServer("customer", demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO)
-      AUTO <- automateModuleServer("automate", AUTO, materialInfo, beerInfo, costInfo)
+      matPurchaseModuleServer("material", general, material, costInfo, disabled, selected)
+      beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled, general, selected)
+      customerDemandModuleServer("customer", demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO, selected)
+      AUTO <- automateModuleServer("automate", AUTO, materialInfo, beerInfo, costInfo, selected)
       
       return(AUTO)
     }

@@ -10,7 +10,7 @@ beerBrewModuleUI <- function(id, tankOptions, beerOptions) {
   )
 }
 
-beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled, general) {
+beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled, general, selected) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -48,6 +48,8 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
       })
       
       observeEvent(input$brewBeer, {
+        selected$tab <- "Brew Beer"
+        
         if(general$action >= general$maxAction) {
           return(
             sendSweetAlert(
@@ -84,6 +86,15 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
         c(tanks, rawMatQty, general) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty, general)
         beer$tanks <- tanks
         material$rawMatQty <- rawMatQty
+        
+        return(
+          sendSweetAlert(
+            session=session,
+            title="Brewed",
+            text=paste(input$beerChosen, "brewed in Tank", input$tankSelect),
+            type="success"
+          )
+        )
       })
       
       observeEvent(disabled(), {

@@ -22,7 +22,7 @@ automateModuleUI <- function(id) {
   )
 }
 
-automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
+automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, selected) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -55,6 +55,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
             shinyjs::enable("beerAuto")
           }
         }
+        selected$tab <- "Automate"
       })
       
       output$autoSwitch <- renderUI({
@@ -71,24 +72,28 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
         if(!is.null(input$materialAuto)) {
           AUTO$material <- input$materialAuto
         }
+        selected$tab <- "Automate"
       })
       
       observeEvent(input$beerAuto, {
         if(!is.null(input$beerAuto)) {
           AUTO$beer <- input$beerAuto
         }
+        selected$tab <- "Automate"
       })
       
       observeEvent(input$serveAuto, {
         if(!is.null(input$serveAuto)) {
           AUTO$serveCust <- input$serveAuto
         }
+        selected$tab <- "Automate"
       })
       
       observeEvent(input$storeAuto, {
         if(!is.null(input$storeAuto)) {
           AUTO$beerStore <- input$storeAuto
         }
+        selected$tab <- "Automate"
       })
       
       output$autoMaterial <- renderUI({
@@ -270,6 +275,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
       lapply(1:nrow(materialInfo), function(i) {
         matName <- materialInfo[i, "name"]
         observeEvent(input[[paste0("submitVal", matName)]], {
+          selected$tab <- "Automate"
           if(input[[paste0("supplier", matName, "Input")]] == "") {
             return(
             sendSweetAlert(
@@ -294,6 +300,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
       
       lapply(1:nrow(materialInfo), function(i) {
         observeEvent(input[[paste0("updateVal", materialInfo[i, "name"])]], {
+          selected$tab <- "Automate"
           updateValMat[[paste0("material", materialInfo[i, "name"])]] <- T
         })
       })
@@ -379,6 +386,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
       
       lapply(1:nrow(beerInfo), function(i) {
         observeEvent(input[[paste0("submitVal", beerInfo[i, "name"])]], {
+          selected$tab <- "Automate"
           updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- F
           
           beerIdx <- which(AUTO$beerAuto$name == beerInfo[i, "name"])
@@ -390,6 +398,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
       
       lapply(1:nrow(beerInfo), function(i) {
         observeEvent(input[[paste0("updateVal", beerInfo[i, "name"])]], {
+          selected$tab <- "Automate"
           updateValBeer[[paste0("beer", beerInfo[i, "name"])]] <- T
         })
       })

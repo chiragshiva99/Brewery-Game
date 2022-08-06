@@ -14,7 +14,7 @@ customerDemandModuleUI <- function(id) {
 
 }
 
-customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO) {
+customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO, selected) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -100,6 +100,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
       })
       
       observe({
+        
         if (nrow(demand$dayDemand)> 0) {
           res <- lapply(1:nrow(demand$dayDemand), function(i) {
             input[[paste0("custServe",rownames(demand$dayDemand)[i])]]
@@ -119,6 +120,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         }
 
         if(length(served) > 0) {
+          selected$tab <- "Serve Customers"
           for(i in served) {
             # Satisfied?
             demandData <- list()

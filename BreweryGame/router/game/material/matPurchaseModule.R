@@ -11,7 +11,7 @@ matPurchaseModuleUI <- function(id, materialOptions) {
   )
 }
 
-matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
+matPurchaseModuleServer <- function(id, general, material, costInfo, disabled, selected) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -23,13 +23,19 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
         amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
         
         color <- "success"
-        if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty)) | (is.na(input$purchQty))) {
+        if(is.null(input$purchQty)) {
+          color <- "danger"
+        } else if (is.na(input$purchQty)){
+          color <- "danger"
+        } else if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty))) {
           color <- "danger"
         }
-        
-        if(amt > general$money) {
-          color <- "danger"
-        }
+
+        if(!is.null(input$purchQty)) {
+          if(amt > general$money) {
+            color <- "danger"
+          }
+        }   
         return(
           actionBttn(ns("purchaseok"), "Confirm Purchase", style="jelly", color=color)
         )
@@ -56,7 +62,7 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
         # shinyjs::disable("purchaseok")
         amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
         
-        if (is.na(amt)) {
+        if (is.null(input$purchQty)) {
           text <- "Please input a value"
         } else if (input$purchQty != as.integer(input$purchQty)){
           text <- "Please enter an Integer value"
@@ -74,8 +80,18 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
       observeEvent(input$purchaseok, {
         
         amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        if((is.null(input$purchQty)) | (is.na(input$purchQty))) {
+          return(
+            sendSweetAlert(
+              session=session,
+              title="Input Invalid!",
+              text=NULL,
+              type="error"
+            )
+          )
+        }
         
-        if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty)) | (is.na(input$purchQty))) {
+        if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty))) {
           return(
             sendSweetAlert(
               session=session,
@@ -86,17 +102,18 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
           )
         }
         
-        if(amt > general$money) {
-          return(
-            sendSweetAlert(
-              session=session,
-              title="Not Enough Money!",
-              text=NULL,
-              type="warning"
+        if(!is.null(input$purchQty)) {
+          if(amt > general$money) {
+            return(
+              sendSweetAlert(
+                session=session,
+                title="Not Enough Money!",
+                text=NULL,
+                type="warning"
+              )
             )
-          )
+          }
         }
-        
         
         c(general, material) %<-% orderMaterial(general, material, costInfo, input$matChosen, input$purchQty, input$supplierChosen)
         setQty <- 0

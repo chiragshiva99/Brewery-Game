@@ -5,7 +5,8 @@ beerBrewModuleUI <- function(id, tankOptions, beerOptions) {
     selectInput(ns("tankSelect"), "Choose a Tank", choices=tankOptions),
     selectInput(ns("beerChosen"), "Choose a Beer", choices=beerOptions),
     htmlOutput(ns("beerReq")),
-    actionButton(ns("brewBeer"), "Brew Beer")
+    br(),
+    htmlOutput(ns("brewButton"))
   )
 }
 
@@ -15,6 +16,26 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
     function(input, output, session) {
       ns <- session$ns
       
+      output$brewButton <- renderUI({
+        
+        color <- "success"
+        
+        if(general$action >= general$maxAction) {
+          color <- "danger"
+        }
+        
+        if(beer$tanks[input$tankSelect,"Beer"] != "Empty") {
+          color <- "danger"
+        }
+        
+        if(!checkMaterialAmount(input$beerChosen, beerReq, material$rawMatQty)) {
+          color <- "danger"
+        }
+        
+        return(
+          actionBttn(ns("brewBeer"), "Brew Beer", style="jelly", color=color)
+        )
+      })
       
       output$beerReq <- renderUI({
         shinyjs::disable("brewBeer")
@@ -22,9 +43,8 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
           text <- getReqAmt(input$beerChosen, beerReq, material$rawMatQty)
         } else {
           text <- paste("Tank", input$tankSelect, "is occupied.")
-          shinyjs::disable("brewBeer")
         }
-        text
+        h4(text)
       })
       
       observeEvent(input$brewBeer, {
@@ -39,6 +59,27 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
           )
         }
         
+        if(beer$tanks[input$tankSelect,"Beer"] != "Empty") {
+          return(
+            sendSweetAlert(
+              session=session,
+              title=paste("Tank", input$tankSelect, "is occupied!"),
+              text=NULL,
+              type="error"
+            )
+          )
+        }
+        
+        if(!checkMaterialAmount(input$beerChosen, beerReq, material$rawMatQty)) {
+          return(
+            sendSweetAlert(
+              session=session,
+              title="Not Enough Material!",
+              text=NULL,
+              type="error"
+            )
+          )
+        }
         
         c(tanks, rawMatQty, general) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty, general)
         beer$tanks <- tanks

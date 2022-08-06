@@ -63,11 +63,11 @@ gameModuleUI <- function(id, disabled=F) {
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            column(width=2,
+            column(width=1,
                    bs4ValueBoxOutput(ns("day"), width=12),
                    br()
                    ),
-            bs4ValueBoxOutput(ns("money"), width=2),
+            bs4ValueBoxOutput(ns("money"), width=3),
             column(width=3,
                    customerLostUI(ns("customerLost"))
                    ),
@@ -157,7 +157,7 @@ gameModuleServer <- function(id, USER) {
       ## Info params
       output$money <- renderbs4ValueBox({
         bs4ValueBox(
-          h1(paste("$", as.character(general$money))), 
+          h1(paste("$", format(general$money, nsmall=2))), 
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",

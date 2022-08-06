@@ -13,16 +13,39 @@ getReqAmt <- function(beer, reqTable, matQty, pID=1) {
   beerReqTable <- beerReqTable %>% rename(reqQty = qty) %>% rename(name=materialName)
   checkAmtTable <- merge(beerReqTable, matQty, by=c("name"), all.x=T)
   shinyjs::enable("brewBeer")
-  for (i in 1:nrow(checkAmtTable)){
-    if(checkAmtTable[i, "reqQty"] > checkAmtTable[i, "qty"]) {
-      text <- paste0("Not enough material for ",beer)
-      shinyjs::disable("brewBeer")
-      break
+  
+  if(any(checkAmtTable[, "reqQty"] > checkAmtTable[, "qty"])) {
+    shinyjs::disable("brewBeer")
+    text <- "Need"
+    for (i in 1:nrow(checkAmtTable)) {
+      
+      if(checkAmtTable[i, "reqQty"] > checkAmtTable[i, "qty"]) {
+        diff <- checkAmtTable[i, "reqQty"] - checkAmtTable[i, "qty"]
+        mat <- checkAmtTable[i, "name"]
+        text <- paste0(text, " ",diff, " more ", mat, ", ")
+      }
     }
+    text <- substr(text, 1, nchar(text)-2)
+    text <- paste0(text,".")
   }
+  
   text
 }
 
+checkMaterialAmount <- function(beer, reqTable, matQty, pID=1) {
+  enough <- T
+  beerReqTable <- reqTable %>% subset(beerName == beer) %>% subset(processID == pID) %>% subset(select=c("materialName", "qty"))
+  
+  beerReqTable <- beerReqTable %>% rename(reqQty = qty) %>% rename(name=materialName)
+  checkAmtTable <- merge(beerReqTable, matQty, by=c("name"), all.x=T)
+  
+  if(any(checkAmtTable[, "reqQty"] > checkAmtTable[, "qty"])) {
+    enough <- F
+
+  }
+  
+  enough
+}
 
 
 addBeerToTank <- function(tanks, select, beer, beerInfo) {

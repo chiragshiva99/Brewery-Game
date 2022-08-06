@@ -9,7 +9,7 @@
 
 # At the beginning of any R session, record your AWS database password:
 
-# Now, anywhere in your code where the password is needed you can get it usingSW
+# Now, anywhere in your code where the password is needed you can get it using
 # getOption("AWSPassword")
 # Otherwise it is hidden. So now this code can be shared with anyone 
 # without giving them access to your personal AWS database.

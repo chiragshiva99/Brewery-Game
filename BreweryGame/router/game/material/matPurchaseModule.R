@@ -4,9 +4,10 @@ matPurchaseModuleUI <- function(id, materialOptions) {
     selectInput(ns("matChosen"), "Choose a Material", choices=materialOptions),
     htmlOutput(ns("supplierCompare")),
     uiOutput(ns("supplierInput")),
-    numericInput(ns("purchQty"), "Enter a Quantity to Purchase", value=0, min=1, step=1),
+    htmlOutput(ns("quantityInput")),
     htmlOutput(ns("costOfPurchase")),
-    actionButton(ns("purchaseok"), "Confirm Purchase")
+    br(),
+    htmlOutput(ns("purchaseButton"))
   )
 }
 
@@ -15,6 +16,30 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
     id,
     function(input, output, session) {
       ns <- session$ns
+      
+      setQty <- reactive(0)
+      
+      output$purchaseButton <- renderUI({
+        amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        
+        color <- "success"
+        if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty)) | (is.na(input$purchQty))) {
+          color <- "danger"
+        }
+        
+        if(amt > general$money) {
+          color <- "danger"
+        }
+        return(
+          actionBttn(ns("purchaseok"), "Confirm Purchase", style="jelly", color=color)
+        )
+      })
+      
+      output$quantityInput <- renderUI({
+        return(
+          numericInput(ns("purchQty"), "Enter a Quantity to Purchase", value=setQty(), min=1, step=1)
+        )
+      })
       
       output$supplierCompare <- renderTable({
         supplierInfo <- costInfo %>% subset(materialName==input$matChosen) %>% select(-materialName) %>% rename(Supplier=supplierName, "Order Cost"=fixedCost, "Unit Cost"=variableCost, "Lead Time"=daysToComplete)
@@ -28,25 +53,62 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled) {
       })
       
       output$costOfPurchase <- renderUI({
-        shinyjs::disable("purchaseok")
+        # shinyjs::disable("purchaseok")
         amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
-        print(amt)
+        
         if (is.na(amt)) {
           text <- "Please input a value"
         } else if (input$purchQty != as.integer(input$purchQty)){
           text <- "Please enter an Integer value"
+        } else if (input$purchQty < 1) {
+          text <- "Please enter a valid value"
         } else if (amt <= general$money) {
-          text <-  paste("Amount:", amt)
+          text <-  paste("Cost:", amt)
           shinyjs::enable("purchaseok")
         } else {
           text <- "Not Enough Money to purchase!"
         }
-        text 
+        h4(text) 
       })
       
       observeEvent(input$purchaseok, {
+        
+        amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
+        
+        if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty)) | (is.na(input$purchQty))) {
+          return(
+            sendSweetAlert(
+              session=session,
+              title="Quantity Input Invalid!",
+              text=NULL,
+              type="error"
+            )
+          )
+        }
+        
+        if(amt > general$money) {
+          return(
+            sendSweetAlert(
+              session=session,
+              title="Not Enough Money!",
+              text=NULL,
+              type="warning"
+            )
+          )
+        }
+        
+        
         c(general, material) %<-% orderMaterial(general, material, costInfo, input$matChosen, input$purchQty, input$supplierChosen)
-        removeModal()
+        setQty <- 0
+        
+        return(
+          sendSweetAlert(
+            session=session,
+            title="Purchased",
+            text=paste(input$purchQty, input$matChosen, "bought from", input$supplierChosen),
+            type="success"
+          )
+        )
       })
       
       observeEvent(disabled(), {

@@ -27,7 +27,7 @@ progressModuleServer <- function(id, material, beer, demand, general, beerInfo, 
       ns <- session$ns
       
       matProgModuleServer("material", material)
-      AUTO <- beerTankModuleServer("beer", beer, tanks, AUTO)
+      AUTO <- beerTankModuleServer("beer", beer, tanks, AUTO, general)
       totalDemandModuleServer("totalDemand", demand, beerInfo, customerInfo)
       
       return(AUTO)

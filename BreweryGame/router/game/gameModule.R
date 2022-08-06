@@ -62,11 +62,16 @@ gameModuleUI <- function(id, disabled=F) {
   tabItem(tabName ="gameTab", class = "active",
           # Application title
           fluidRow(
-            bs4ValueBoxOutput(ns("day"), width=2),
+            column(width=2,
+                   bs4ValueBoxOutput(ns("day"), width=12),
+                   br(),
+                   br()
+                   ),
             bs4ValueBoxOutput(ns("money"), width=2),
-            column(width=5,
+            column(width=3,
                    customerLostUI(ns("customerLost"))
                    ),
+            bs4ValueBoxOutput(ns("actionCounter"), width=2),
             column(width=3,
                 fluidRow(
                   actionBttn(
@@ -178,7 +183,7 @@ gameModuleServer <- function(id, USER) {
       ## Info params
       output$money <- renderbs4ValueBox({
         bs4ValueBox(
-          paste("$", as.character(general$money)), 
+          h1(paste("$", as.character(general$money))), 
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",
@@ -188,11 +193,19 @@ gameModuleServer <- function(id, USER) {
       
       output$day <- renderbs4ValueBox({
         bs4ValueBox(
-          general$day, 
+          h1(general$day), 
           "Day",
           icon=icon("calendar"),
           color="info",
           gradient=T
+        )
+      })
+      
+      output$actionCounter <- renderbs4ValueBox({
+        bs4ValueBox(
+          h1(paste0(general$action, "/", general$maxAction)),
+          "Beer Actions Taken",
+          color="danger"
         )
       })
       

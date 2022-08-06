@@ -188,10 +188,14 @@ generateMaterialDataToStore <- function(day, material, materialInfo) {
   return(dayMatDF)
 }
 
-completeBeerInTank <- function(beer, AUTO) {
+completeBeerInTank <- function(beer, AUTO, general) {
   
   completeTanks <- which(beer$tanks$DaysInTank >= beer$tanks$daysToComplete)
   for (tank in completeTanks) {
+    if(general$action >= general$maxAction) {
+      break
+    }
+    
     beerIdx <- which(beer$beerInv["name"] == beer$tanks[tank, "Beer"])
     autoIdx <- which(AUTO$beerAuto["name"] == beer$tanks[tank, "Beer"])
     
@@ -206,11 +210,14 @@ completeBeerInTank <- function(beer, AUTO) {
       AUTO$beerAuto[autoIdx, "rebrew"] <- F
     }
     
+    ## Add to turn counter
+    general$action <- general$action + 1
   }
   return(
     list(
       beer,
-      AUTO
+      AUTO,
+      general
     )
   )
 }
@@ -347,7 +354,7 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   
   ## Complete Tank Orders if automated
   if (AUTO$beerStore | AUTO$all) {
-    c(beer, AUTO) %<-% completeBeerInTank(beer, AUTO)
+    c(beer, AUTO, general) %<-% completeBeerInTank(beer, AUTO, general)
   }
   
   ## IF auto brew
@@ -364,6 +371,10 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
       # Check if any beers are below reorder quantity
       tankChoice <- 1
       for (i in 1:length(beerOrder)) {
+        if(general$action >= general$maxAction) {
+          break
+        }
+        
         beerName <- beerOrder[i]
         beerIdx <- which(beer$beerInv$name == beerName)
         beerAutoIdx <- which(AUTO$beerAuto$name == beerName)
@@ -374,7 +385,7 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
           tankChosen <- tankOrder[tankChoice]
           
           # rebrew if possible
-          c(beer$tanks, material$rawMatQty) %<-% brewBeer(beer$tanks, tankChosen, beerName, INIT$beerInfo, INIT$beerReq, material$rawMatQty)
+          c(beer$tanks, material$rawMatQty, general) %<-% brewBeer(beer$tanks, tankChosen, beerName, INIT$beerInfo, INIT$beerReq, material$rawMatQty, general)
           
           # Prevent further rebrew 
           AUTO$beerAuto[beerAutoIdx, "rebrew"] <- T
@@ -423,6 +434,9 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
     ### update end of game
     result <- updateGameID(USER$id, USER$gameID)
   }
+  
+  ## Reset Action counter
+  general$action <- 0
   
   return(
     list(

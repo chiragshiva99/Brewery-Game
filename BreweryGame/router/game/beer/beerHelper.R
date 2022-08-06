@@ -49,14 +49,15 @@ updateRawMatQty <- function(beerReq, rawMatInfo, beer) {
   }
 }
 
-brewBeer <- function(tanks, tankSelect, beerChosen, beerInfo, beerReq, rawMatQty) {
+brewBeer <- function(tanks, tankSelect, beerChosen, beerInfo, beerReq, rawMatQty, general) {
   tanks <- addBeerToTank(tanks, tankSelect, beerChosen, beerInfo)
   rawMatQty <- updateRawMatQty(beerReq, rawMatQty, beerChosen)
-  
+  general$action <- general$action + 1
   return(
     list(
       tanks,
-      rawMatQty
+      rawMatQty,
+      general
     )
   )
 }

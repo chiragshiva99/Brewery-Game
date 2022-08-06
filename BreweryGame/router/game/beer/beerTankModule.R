@@ -20,7 +20,7 @@ beerTankModuleUI <- function(id) {
   )
 }
 
-beerTankModuleServer <- function(id, beer, tanks, AUTO) {
+beerTankModuleServer <- function(id, beer, tanks, AUTO, general) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -111,6 +111,10 @@ beerTankModuleServer <- function(id, beer, tanks, AUTO) {
             return()
           }
           
+          # if(general$action >= general$maxAction) {
+          #   return()
+          # }
+          
           if(beer$tanks[i, "DaysInTank"] >= beer$tanks[i, "daysToComplete"]) {
             return(
               actionBttn(
@@ -130,9 +134,21 @@ beerTankModuleServer <- function(id, beer, tanks, AUTO) {
       
       lapply(1:nrow(tanks), function(i) {
         observeEvent(input[[paste0("tankStore", i)]], {
+          if(general$action >= general$maxAction) {
+            return(
+              sendSweetAlert(
+                session=session,
+                title="Max Actions Taken Today!",
+                text=NULL,
+                type="warning"
+              )
+            )
+          }
+          
+          
           beerIdx <- which(beer$beerInv["name"] == beer$tanks[i, "Beer"])
           beer$beerInv[beerIdx, "qty"] <- beer$beerInv[beerIdx, "qty"] + beer$tanks[i, "tankSize"]
-          
+          general$action <- general$action + 1
           beer$tanks[i, "Beer"] <- "Empty"
           beer$tanks[i, "DaysInTank"] <- NA
           beer$tanks[i, "daysToComplete"] <- NA

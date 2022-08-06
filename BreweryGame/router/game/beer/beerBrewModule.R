@@ -9,10 +9,12 @@ beerBrewModuleUI <- function(id, tankOptions, beerOptions) {
   )
 }
 
-beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled) {
+beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled, general) {
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
+      
       
       output$beerReq <- renderUI({
         shinyjs::disable("brewBeer")
@@ -26,7 +28,19 @@ beerBrewModuleServer <- function(id, beer, material, beerInfo, beerReq, disabled
       })
       
       observeEvent(input$brewBeer, {
-        c(tanks, rawMatQty) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty)
+        if(general$action >= general$maxAction) {
+          return(
+            sendSweetAlert(
+              session=session,
+              title="Max Actions Taken Today!",
+              text=NULL,
+              type="warning"
+            )
+          )
+        }
+        
+        
+        c(tanks, rawMatQty, general) %<-% brewBeer(beer$tanks, input$tankSelect, input$beerChosen, beerInfo, beerReq, material$rawMatQty, general)
         beer$tanks <- tanks
         material$rawMatQty <- rawMatQty
       })

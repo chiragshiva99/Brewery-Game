@@ -31,6 +31,7 @@ source("router/game/gameHelper/demandHelper.R")
 source("router/game/gameHelper/stateHelper.R")
 source("router/game/gameHelper/advanceHelper.R")
 source("router/game/gameHelper/initHelper.R")
+source("router/game/gameHelper/resetHelper.R")
 
 resetDialog <- function(session) {
   ns <- session$ns
@@ -80,15 +81,7 @@ gameModuleUI <- function(id, disabled=F) {
                     color="danger")
                 ),
                 br(),
-                fluidRow(
-                  column(width=5,
-                         htmlOutput(ns("advanceNInput"))
-                         ),
-                  column(width=7,
-                         br(),
-                         htmlOutput(ns("advanceNButton"))
-                         )
-                )
+                htmlOutput(ns("resetOrAdv"))
             )
           ),
           fluidRow(
@@ -144,21 +137,7 @@ gameModuleServer <- function(id, USER) {
         shinyjs::enable("purchase")
         shinyjs::enable("advance")
         
-        INIT$seed <- sample(1:2^15, 1)
-        set.seed(INIT$seed)
-        
-        INIT$totalDemand <- generateTotalDemand(INIT$customerDemand, totalDays)
-        dayDemand <- subset(INIT$totalDemand, arrivalDay==1)
-        
-        general$money <- INIT$tartingMoney
-        general$day <- INIT$initDay
-        demand$dayDemand <- dayDemand
-        demand$lostCust <- 0
-        demand$lostPerBeer <- INIT$lostPerBeer
-        beer$tanks <- INIT$tanks
-        beer$beerInv <- INIT$beerInv
-        material$rawMatOrder <- INIT$rawMatOrder
-        material$rawMatQty <- INIT$rawMatQty
+        c(INIT, gameStateData, AUTO, general, beer, material, demand) %<-% resetGameArgs(INIT, gameStateData, AUTO, general, beer, material, demand)
         
         result <- createGame(USER$id)
         if(is.null(result)) {
@@ -200,11 +179,40 @@ gameModuleServer <- function(id, USER) {
         bs4ValueBox(
           h1(paste0(general$action, "/", general$maxAction)),
           "Beer Actions Taken",
-          color="danger"
+          color="danger",
+          icon=icon("person")
         )
       })
       
       ## Advance Button
+      
+      output$resetOrAdv <- renderUI({
+        if(USER$finish) {
+          return(
+            fluidRow(
+              actionBttn(
+                inputId=ns("resetok"),
+                label="RESET GAME",
+                style="jelly",
+                color="success",
+                size="lg"
+              )
+            )
+          )
+        } else {
+          return(
+            fluidRow(
+              column(width=5,
+                     htmlOutput(ns("advanceNInput"))
+              ),
+              column(width=7,
+                     br(),
+                     htmlOutput(ns("advanceNButton"))
+              )
+            )
+          )
+        }
+      })
       
       output$advanceNInput <- renderUI({
         numericInput(
@@ -223,7 +231,7 @@ gameModuleServer <- function(id, USER) {
           style="jelly",
           color="danger",
           size="sm"
-          )
+        )
       })
       
       observeEvent(input$advance, {
@@ -305,7 +313,7 @@ gameModuleServer <- function(id, USER) {
           for(i in 1:100) {
             c(USER, AUTO, gameStateData, general, beer, material, demand) %<-% advanceDay(USER, AUTO, gameStateData, general, beer, material, demand, INIT)
           }
-          return()
+          return(endGameModal(session))
         }
         
         if(general$day == (INIT$totalDays)) {

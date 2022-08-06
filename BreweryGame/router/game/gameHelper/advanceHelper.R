@@ -249,7 +249,7 @@ completeMaterialOrder <- function(material, AUTO) {
 
 advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, demand, INIT) {
   ## Store seed if game started
-  if(general$day == 1) {
+  if(general$day == INIT$initDay) {
     print(paste("SEED:", INIT$seed))
     updateSeed(USER$id, USER$gameID, INIT$seed)
   }

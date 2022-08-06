@@ -68,8 +68,6 @@ initGameArgs <- function(INIT) {
       demandData$quantity <- qty
       demandData$arrivalDay <- day
       demandData$serviceDay <- day
-      print(formattedData)
-      print(demandData)
       formattedData <- rbind(formattedData, demandData)
     }
     

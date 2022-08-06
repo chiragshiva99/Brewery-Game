@@ -2,6 +2,7 @@ source("router/game/gameModule.R")
 source("router/analysis/analysisModule.R")
 source("router/login/loginModule.R")
 source("router/userInfo/userInfoModule.R")
+source("router/leaderboard/leaderboardModule.R")
 
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
@@ -53,6 +54,7 @@ routerModuleUI <- function(id) {
 
       
       header = dashboardHeader(
+        h3("Beer-field Technologies"),
         title = dashboardBrand(
           title = "The Brewery Game",
           color = "primary",
@@ -153,7 +155,7 @@ routerModuleServer <- function(id) {
         tags$li(a(icon("fa fa-sign-out"), "Logout", 
                   href="javascript:window.location.reload(true)"),
                 class = "dropdown", 
-                style = "background-color: #eee !important; border: 0;
+                style = "!important; border: 0;
                     font-weight: bold; margin:5px; padding: 10px;")
       })
       
@@ -175,6 +177,11 @@ routerModuleServer <- function(id) {
           sidebarMenuItems[[counter]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
         }
         
+        if (USER$gameStart == T) {
+          counter <- counter + 1
+          sidebarMenuItems[[counter]] <- menuItem("Leaderboard", tabName = "leaderTab", icon = icon("star"))
+        }
+        
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       
@@ -183,7 +190,8 @@ routerModuleServer <- function(id) {
           tabItems(
             userInfoModuleUI(ns("user")),
             gameModuleUI(ns("game")),
-            analysisModuleUI(ns("analysis"))
+            analysisModuleUI(ns("analysis")),
+            leaderboardModuleUI(ns("leader"))
           )
         }
         else if (USER$login == T & USER$gameStart == F & USER$finish == F) {
@@ -207,6 +215,8 @@ routerModuleServer <- function(id) {
       
       #### ANALYSIS ####
       analysisModuleServer("analysis", stateData)
+      
+      leaderboardModuleServer("leader", USER)
     }
   )
 }

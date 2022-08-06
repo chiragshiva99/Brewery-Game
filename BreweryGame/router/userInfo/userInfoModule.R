@@ -1,14 +1,24 @@
+source("router/userInfo/userInfoHelper.R")
+
 userInfoModuleUI <- function(id) {
   ns <- NS(id)
   tabItem(
     tabName = "userInfoTab",
     fluidRow(
-      h1("Hi User!!"),
+      htmlOutput(ns("hi")),
     ),
     fluidRow(
-      box(
-        title="User Information",
-        htmlOutput(ns("userInfo"))
+      column(width=12,
+             box(
+               title="User Information",
+               collapsible = F,
+               htmlOutput(ns("userInfo"))
+             ),
+             box(
+               title="Your Best Performances",
+               collapsible = F,
+               tableOutput(ns("leaderboard"))
+             )
       )
     )
   )
@@ -19,13 +29,24 @@ userInfoModuleServer <- function(id, USER) {
     id,
     function(input, output, session) {
       
-      observeEvent(input$tab, {
-        updateTabsetPanel(session, inputId = "mybox2", input$tab)
+      output$hi <- renderUI({
+        h1(paste0("Hi ", USER$username, "!!!"))
       })
       
       output$userInfo <- renderUI({
         
         paste("Current Game :", USER$gameID)
+      })
+      
+      output$leaderboard <- renderTable({
+        click <- USER$finish + USER$gameStart
+        scores <- getLeaderboardUser(USER$id)
+        
+        scores <- scores %>% select(-gameSeed, -userID, -username) %>% rename("Cash Balance"=cashBalance)
+        
+        scores$Ranking <- rownames(scores)
+        scores <- scores[,c(2,1)]
+        scores
       })
     }
   )

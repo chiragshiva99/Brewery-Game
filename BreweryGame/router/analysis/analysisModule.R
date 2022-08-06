@@ -12,7 +12,6 @@ analysisModuleUI <- function(id) {
         title="Money",
         plotlyOutput(ns("moneyPlot"))
       ),
-      # not sure
       box(
         title="Tank Status",
         plotlyOutput(ns("tankPlot"))
@@ -21,9 +20,13 @@ analysisModuleUI <- function(id) {
         title="Beer inventory levels",
         plotlyOutput(ns("beerPlot"))
       ),
-      # not sure 
       box(
-        title="Beer Demand",
+        title=radioButtons("radio",
+                           label = HTML('<h1">Beer Demand</h1>'),
+                           choices = list("Total Demand" = 1, "IPA" = 2, "Lager" = 3, "Stout" = 4),
+                           selected = 1,
+                           inline = T,
+                           width = "100%"),
         plotlyOutput(ns("demandPlot"))
       ),
       box(
@@ -83,19 +86,45 @@ analysisModuleServer <- function(id, stateData) {
         demandBeer2 <- subset(demandData, beerID==2)
         demandBeer3 <- subset(demandData, beerID==3)
         
-        # p <- ggplot(demandData, aes(gameDay, quantity)) +
-        #   geom_line(aes(color=beerName), size=1) + 
-        #   geom_point(aes(shape=customerName, color=beerName))
-        
-        p <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
+        p1 <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
           geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
           ) +
-          labs(title="Demand for Beer 1", 
+          labs(title="Demand for Beer", 
                x = "Game Day",
                y = "Beer Quantity"
           )+darkTheme
         
-        ggplotly(p)
+        p2 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+          geom_bar(stat = "identity", fill = "red", alpha= 0.7#,color = "black"
+          ) +
+          labs(title="Demand for Beer 1 - IPA", 
+               x = "Game Day",
+               y = "Beer Quantity"
+          )+darkTheme
+        
+        p3 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+          geom_bar(stat = "identity", fill = "green", alpha= 0.7#,color = "black"
+          ) +
+          labs(title="Demand for Beer 2- Lager", 
+               x = "Game Day",
+               y = "Beer Quantity"
+          )+darkTheme
+        
+        p4 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+          geom_bar(stat = "identity", fill = "blue", alpha= 0.7#,color = "black"
+          ) +
+          labs(title="Demand for Beer 3- Stout", 
+               x = "Game Day",
+               y = "Beer Quantity"
+          )+darkTheme
+        
+        ggplotly(p1)
+        # ggplotly(p2)
+        # ggplotly(p3)
+        # ggplotly(p4)
+        # if(input$radio == 1){ggplotly(p1)}
+        # else{ggplotly(p1)}
+        
       })
       
       output$lostPlot <- renderPlotly({

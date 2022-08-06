@@ -22,8 +22,9 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Beer Demand",
-        selectInput("beer", "Beer:",
-                    c("Total Demand" = "Total",
+        selectInput("Beer", 
+                    "Beer:",
+                    c("Total" = "Total",
                       "IPA" = "IPA",
                       "Lager" = "Lager",
                       "Stout" = "Stout")),
@@ -42,7 +43,7 @@ analysisModuleUI <- function(id) {
   )
 }
 
-analysisModuleServer <- function(id, stateData) {
+analysisModuleServer <- function(id, stateData, input, output) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -66,63 +67,118 @@ analysisModuleServer <- function(id, stateData) {
         ggplotly(p)
       })
       
-      # 2 not sure how to plot this 
-      output$tankPlot <- renderPlotly({
-        print(stateData$tank)
-        tankInfo <- stateData$tank
-        tankInfo <- tankInfo %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name, Tank=tankID)
+      # # 2 not sure how to plot this 
+      # output$tankPlot <- renderPlotly({
+      #   print(stateData$tank)
+      #   tankInfo <- stateData$tank
+      #   tankInfo <- tankInfo %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name, Tank=tankID)
+      #   
+      #   p <- ggplot(tankInfo, aes(gameDay, Tank)) + 
+      #     geom_point(aes(color=Beer))
+      #   
+      #   ggplotly(p)
+      # })
+      # # 4 not sure how to plot this
+      # output$demandPlot <- renderPlotly({
+      #   demandData <- stateData$demand
+      #   demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+      #   
+      #   demandBeer1 <- subset(demandData, beerID==1)
+      #   demandBeer2 <- subset(demandData, beerID==2)
+      #   demandBeer3 <- subset(demandData, beerID==3)
+      #   
+      #   p1 <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
+      #     geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
+      #     ) +
+      #     labs(title="Demand for Beer", 
+      #          x = "Game Day",
+      #          y = "Beer Quantity"
+      #     )+darkTheme
+      #   
+      #   p2 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+      #     geom_bar(stat = "identity", fill = "red", alpha= 0.7#,color = "black"
+      #     ) +
+      #     labs(title="Demand for Beer 1 - IPA", 
+      #          x = "Game Day",
+      #          y = "Beer Quantity"
+      #     )+darkTheme
+      #   
+      #   p3 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+      #     geom_bar(stat = "identity", fill = "green", alpha= 0.7#,color = "black"
+      #     ) +
+      #     labs(title="Demand for Beer 2- Lager", 
+      #          x = "Game Day",
+      #          y = "Beer Quantity"
+      #     )+darkTheme
+      #   
+      #   p4 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+      #     geom_bar(stat = "identity", fill = "blue", alpha= 0.7#,color = "black"
+      #     ) +
+      #     labs(title="Demand for Beer 3- Stout", 
+      #          x = "Game Day",
+      #          y = "Beer Quantity"
+      #     )+darkTheme
+      #   
+      #   # ggplotly(ifelse(input$Beer == "Total"), p1, p2 )
+      #   # if (input$Beer == "Total") {ggplotly(p1)}
+      #   # if (input$Beer == "IPA") {ggplotly(p2)}
+      #   # else {ggplotly(p1)}
         
-        p <- ggplot(tankInfo, aes(gameDay, Tank)) + 
-          geom_point(aes(color=Beer))
-        
-        ggplotly(p)
-      })
-      # 4 not sure how to plot this
-      output$demandPlot <- renderPlotly({
-        demandData <- stateData$demand
-        demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
-        
-        demandBeer1 <- subset(demandData, beerID==1)
-        demandBeer2 <- subset(demandData, beerID==2)
-        demandBeer3 <- subset(demandData, beerID==3)
-        
-        p1 <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
-          geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
-          ) +
-          labs(title="Demand for Beer", 
-               x = "Game Day",
-               y = "Beer Quantity"
-          )+darkTheme
-        
-        p2 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
-          geom_bar(stat = "identity", fill = "red", alpha= 0.7#,color = "black"
-          ) +
-          labs(title="Demand for Beer 1 - IPA", 
-               x = "Game Day",
-               y = "Beer Quantity"
-          )+darkTheme
-        
-        p3 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
-          geom_bar(stat = "identity", fill = "green", alpha= 0.7#,color = "black"
-          ) +
-          labs(title="Demand for Beer 2- Lager", 
-               x = "Game Day",
-               y = "Beer Quantity"
-          )+darkTheme
-        
-        p4 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
-          geom_bar(stat = "identity", fill = "blue", alpha= 0.7#,color = "black"
-          ) +
-          labs(title="Demand for Beer 3- Stout", 
-               x = "Game Day",
-               y = "Beer Quantity"
-          )+darkTheme
-        
-        ggplotly(p1)
-        # if (input$Beer == "Total") {return(ggplotly(p1))}
-        # if (input$Beer == "IPA") {return(ggplotly(p2))}
-        # else {return(ggplotly(p1))}
-      })
+        observeEvent(input$Beer,{
+          demandData <- stateData$demand
+          demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          
+          demandBeer1 <- subset(demandData, beerID==1)
+          demandBeer2 <- subset(demandData, beerID==2)
+          demandBeer3 <- subset(demandData, beerID==3)
+          
+          p1 <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
+            geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
+            ) +
+            labs(title="Demand for Beer", 
+                 x = "Game Day",
+                 y = "Beer Quantity"
+            )+darkTheme
+          
+          p2 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+            geom_bar(stat = "identity", fill = "red", alpha= 0.7#,color = "black"
+            ) +
+            labs(title="Demand for Beer 1 - IPA", 
+                 x = "Game Day",
+                 y = "Beer Quantity"
+            )+darkTheme
+          
+          p3 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+            geom_bar(stat = "identity", fill = "green", alpha= 0.7#,color = "black"
+            ) +
+            labs(title="Demand for Beer 2- Lager", 
+                 x = "Game Day",
+                 y = "Beer Quantity"
+            )+darkTheme
+          
+          p4 <- ggplot(demandBeer1, aes(gameDay, quantity)) +
+            geom_bar(stat = "identity", fill = "blue", alpha= 0.7#,color = "black"
+            ) +
+            labs(title="Demand for Beer 3- Stout", 
+                 x = "Game Day",
+                 y = "Beer Quantity"
+            )+darkTheme
+          if(input$Beer=="Total"){
+            output$demandPlot <- renderPlotly({
+              p1 <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
+                geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
+                ) +
+                labs(title="Demand for Beer", 
+                     x = "Game Day",
+                     y = "Beer Quantity"
+                )+darkTheme
+              ggplotly(p1)
+              })
+          } else {
+            output$demandPlot <- renderPlotly({ggplotly(p2)})
+          }
+        })
+      
       
       output$lostPlot <- renderPlotly({
         lostSales <- subset(stateData$demand, serviceDay == -1)

@@ -116,8 +116,9 @@ gameModuleServer <- function(id, USER) {
       ns <- session$ns
       
       INIT = list(
+        dbStore=F,
         condition=1,
-        tankOptions=list(tankNo=6, tankSize=100),
+        tankOptions=list(tankNo=4, tankSize=100),
         startingMoney=100000,
         totalDays=200,
         endDays=100,

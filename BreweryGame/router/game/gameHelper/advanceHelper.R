@@ -249,6 +249,7 @@ completeMaterialOrder <- function(material, AUTO) {
 
 advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, demand, INIT) {
   ## Store seed if game started
+  print("Advancing for day", general$day)
   if(general$day == INIT$initDay) {
     print(paste("SEED:", INIT$seed))
     updateSeed(USER$id, USER$gameID, INIT$seed)
@@ -269,7 +270,9 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   ## Add demand Data to DB if necessary
   if(nrow(demand$dayDemandDF) > 0) {
     demand$dayDemandDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(demand$dayDemandDF)),demand$dayDemandDF)
-    addToTable("demandTrack", demand$dayDemandDF)
+    if(INIT$dbStore) {
+      addToTable("demandTrack", demand$dayDemandDF)
+    }
   }
   
   day <- general$day
@@ -290,7 +293,10 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   dayCashDF <- rbind(dayCashDF, data)
   dayCashDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayCashDF)), dayCashDF)
   
-  addToTable("cashTrack", dayCashDF)
+  if(INIT$dbStore) {
+    addToTable("cashTrack", dayCashDF)
+  }
+
   
   # Store Tank Levels
   
@@ -298,8 +304,10 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   
   if(nrow(dayTankDF) > 0) {
     dayTankDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayTankDF)), dayTankDF)
-    print(dayTankDF)
-    addToTable("tankTrack", dayTankDF)
+    
+    if(INIT$dbStore) {
+      addToTable("tankTrack", dayTankDF)
+    }
   }
   
   #Store inventory levels of Beer
@@ -307,13 +315,18 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   dayBeerDF <- generateBeerDataToStore(day, beer, INIT$beerInfo, lostBeerOrders)
   
   dayBeerDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayBeerDF)), dayBeerDF)
-  addToTable("beerTrack", dayBeerDF)
+
   
   # Store Material Data
   dayMatDF <- generateMaterialDataToStore(day, material, INIT$materialInfo)
   
   dayMatDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayMatDF)), dayMatDF)
-  addToTable("materialTrack", dayMatDF)
+  
+  if(INIT$dbStore) {
+    addToTable("beerTrack", dayBeerDF)
+    addToTable("materialTrack", dayMatDF)
+  }
+
   
   ## Add all to gameStateData
   gameStateData$beer <- addToGameState(gameStateData$beer, dayBeerDF)
@@ -345,9 +358,6 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   
   # Add New Demand
   ## Update the demand of system
-  if(nrow(demand$dayDemand) > 0) {
-    print(paste("updating demand for day", general$day))
-  }
   
   newDemand <- subset(INIT$totalDemand, arrivalDay==general$day)
   if (nrow(newDemand) > 0) {
@@ -404,22 +414,16 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   
   ## IF auto order
   ## ORDER MATERIALS IF BELOW REORDER QUANTITY
-  print("Check on AUTO")
-  print(AUTO$material)
-  print(AUTO$all)
   if (AUTO$material | AUTO$all) {
     for (i in 1:nrow(material$rawMatQty)) {
       matName <- material$rawMatQty[i, "name"]
       matCurInv <- material$rawMatQty[i, "qty"]
       matAutoIdx <- which(AUTO$materialAuto$name == matName)
       matReorderPoint <- AUTO$materialAuto[matAutoIdx, "reorderPoint"]
-      print(matName)
-      print(matCurInv)
-      print(matReorderPoint)
+
       if ((matCurInv <= matReorderPoint) & (!AUTO$materialAuto[matAutoIdx, "reorder"])) {
         matReorderQuantity <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "reorderQuantity"]
         matReorderSupplier <- AUTO$materialAuto[which(AUTO$materialAuto$name == matName), "supplier"]
-        print(matReorderSupplier)
         # Function does not order if not enough money
         c(general, material) %<-% orderMaterial(general, material, INIT$costInfo, matName, matReorderQuantity, matReorderSupplier)
         

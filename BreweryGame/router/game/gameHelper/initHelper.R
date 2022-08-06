@@ -66,8 +66,8 @@ initGameArgs <- function(INIT) {
       demandData$beerID <- beerID
       demandData$customerID <- customerID
       demandData$quantity <- qty
-      demandData$arrivalDay <- day
-      demandData$serviceDay <- day
+      demandData$arrivalDay <- arrivalDay
+      demandData$serviceDay <- 0
       formattedData <- rbind(formattedData, demandData)
     }
     
@@ -80,7 +80,7 @@ initGameArgs <- function(INIT) {
     beer=INIT$beerState, 
     cash=INIT$cashState, 
     mat=INIT$matState, 
-    demand=initialDemand, 
+    demand=initialDemand,
     tank=INIT$tankState)
   
   

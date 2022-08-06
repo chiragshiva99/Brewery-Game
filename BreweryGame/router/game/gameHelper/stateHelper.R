@@ -7,46 +7,35 @@ getBaseData <- function(gameID, id, rowCount) {
   df
 }
 
-initRawMatOrder <- function() {
-  rawMatOrder <- data.frame(matrix(nrow=0, ncol=5))
-  colnames(rawMatOrder) <- c("Material", "Quantity", "Days", "Supplier", "daysToComplete")
+createEmptyDF <- function(colNames) {
+  df <- data.frame(matrix(nrow=0, ncol=length(colNames)))
+  colnames(df) <- colNames
   
-  return(rawMatOrder)
+  df
+}
+
+initRawMatOrder <- function() {
+  return(createEmptyDF(c("Material", "Quantity", "Days", "Supplier", "daysToComplete")))
 }
 
 createCashStateDF <- function() {
-  stateData <- data.frame(matrix(nrow=0, ncol=4))
-  colnames(stateData) <- c("gameDay", "cashBalance", "revenue", "lostRev")
-  
-  stateData
+  return(createEmptyDF( c("gameDay", "cashBalance", "revenue", "lostRev")))
 }
 
 createBeerStateDF <- function() {
-  stateData <- data.frame(matrix(nrow=0, ncol=5))
-  colnames(stateData) <- c("gameDay", "beerID", "inventory", "inTank", "lostSale")
-  
-  stateData
+  return(createEmptyDF(c("gameDay", "beerID", "inventory", "inTank", "lostSale")))
 }
 
 createTankStateDF <- function() {
-  stateData <- data.frame(matrix(nrow=0, ncol=5))
-  colnames(stateData) <- c("gameDay", "tankID", "beerID", "tankSize", "completed")
-  
-  stateData
+  return(createEmptyDF(c("gameDay", "tankID", "beerID", "tankSize", "completed")))
 }
 
 createMatStateDF <- function() {
-  stateData <- data.frame(matrix(nrow=0, ncol=4))
-  colnames(stateData) <- c("gameDay", "materialID", "inventory", "inTransit")
-  
-  stateData
+  return(createEmptyDF(c("gameDay", "materialID", "inventory", "inTransit")))
 }
 
 createDemandStateDF <- function() {
-  stateData <- data.frame(matrix(nrow=0, ncol=6))
-  colnames(stateData) <- c("gameDay", "customerID", "beerID", "quantity", "arrivalDay", "serviceDay")
-  
-  stateData
+  return(createEmptyDF(c("gameDay", "customerID", "beerID", "quantity", "arrivalDay", "serviceDay")))
 }
 
 addToGameState <- function(gameState, input) {

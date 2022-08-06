@@ -9,8 +9,8 @@ loginModuleUI <- function(id) {
 loginpage <- function(ns) {
   div(id = "loginpage", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
       wellPanel(
-        tags$h1("BEER-FIELD", class = "text-center", style = "padding-top: 0; font-weight:300;"),
-        tags$h1("Technologies", class = "text-center", style = "padding-top: 0; font-weight:300;"),
+        tags$h1("Welcome to", class = "text-center", style = "padding-top: 0; font-weight:300;"),
+        tags$h1("Beer-Field Technologies!", class = "text-center", style = "padding-top: 0; font-weight:300;"),
         br(),
         tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;"),
         textInput(ns("username"), placeholder="Username", label = tagList(icon("user"), "Username")),

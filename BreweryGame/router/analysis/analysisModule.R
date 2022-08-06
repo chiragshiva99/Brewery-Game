@@ -1,5 +1,8 @@
 source("router/analysis/analysisHelper.R")
 
+# Split plots into Modules
+source("router/analysis/demandPlot/demandPlotModule.R")
+
 analysisModuleUI <- function(id) {
   ns <- NS(id)
   tabItem(
@@ -22,13 +25,8 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Beer Demand",
-        selectInput("Beer", 
-                    "Beer:",
-                    c("Total" = "Total",
-                      "IPA" = "IPA",
-                      "Lager" = "Lager",
-                      "Stout" = "Stout")),
-        plotlyOutput(ns("demandPlot"))
+        # call demandPlotModule in UI
+        demandPlotModuleUI(ns("demand"))
       ),
       box(
         title="Material inventory Levels",
@@ -52,6 +50,9 @@ analysisModuleServer <- function(id, stateData, input, output) {
       materialInfo <- getMaterialInfo()
       beerInfo <- getBeerInfo()
       customerInfo <- getCustomerInfo()
+      
+      # Call demandPlot Module in Server
+      demandPlotModuleServer("demand", stateData$demand, beerInfo, customerInfo)
       
       output$moneyPlot <- renderPlotly({
         print(stateData$cash)

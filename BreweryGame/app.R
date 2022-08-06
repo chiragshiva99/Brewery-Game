@@ -7,7 +7,7 @@
 #    http://shiny.rstudio.com/  
 #
 
-# At the beginning of any R session, record your AWS database password:
+# At the beginning of any R session, record your AWSS database password:
 
 # Now, anywhere in your code where the password is needed you can get it using
 # getOption("AWSPassword")

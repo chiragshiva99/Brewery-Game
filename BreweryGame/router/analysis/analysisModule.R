@@ -29,6 +29,10 @@ analysisModuleUI <- function(id) {
       box(
         title="Material inventory Levels",
         plotlyOutput(ns("materialPlot"))
+      ),
+      box(
+        title="Lost Sales",
+        plotlyOutput(ns("lostPlot"))
       )
       
     )
@@ -74,23 +78,33 @@ analysisModuleServer <- function(id, stateData) {
       output$demandPlot <- renderPlotly({
         demandData <- stateData$demand
         demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
-        print(demandData)
         
-        demandBeer1 <- subset(demandData, demandData$beerID==1)
-        demandBeer2 <- subset(demandData, demandData$beerID==2)
-        demandBeer3 <- subset(demandData, demandData$beerID==3)
+        demandBeer1 <- subset(demandData, beerID==1)
+        demandBeer2 <- subset(demandData, beerID==2)
+        demandBeer3 <- subset(demandData, beerID==3)
         
         # p <- ggplot(demandData, aes(gameDay, quantity)) +
         #   geom_line(aes(color=beerName), size=1) + 
         #   geom_point(aes(shape=customerName, color=beerName))
         
-        p <- ggplot(data=demandBeer1, mapping=aes(gameDay, quantity)) +
-          geom_bar(mapping = aes(x=gameDay, y=quantity), stat = "identity", fill = "#EC9D00"#,color = "black"
+        p <- ggplot(data=demandData, mapping=aes(gameDay, quantity, fill=beerName)) +
+          geom_bar(stat = "identity", #fill = "#EC9D00"#,color = "black"
           ) +
           labs(title="Demand for Beer 1", 
                x = "Game Day",
                y = "Beer Quantity"
           )+darkTheme
+        
+        ggplotly(p)
+      })
+      
+      output$lostPlot <- renderPlotly({
+        lostSales <- subset(stateData$demand, serviceDay == -1)
+        lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
+        
+        p <- ggplot(data=lostBeer, mapping=aes(gameDay, lostSale, fill=as.factor(beerID))) +
+          geom_bar(position="stack", stat="identity") + 
+          darkTheme
         
         ggplotly(p)
       })

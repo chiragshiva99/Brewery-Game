@@ -72,7 +72,7 @@ analysisModuleServer <- function(id, stateData) {
       output$demandPlot <- renderPlotly({
         demandData <- stateData$demand
         demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
-        # print(demandData)
+        print(demandData)
         
         demandBeer1 <- subset(demandData, demandData$beerID==1)
         demandBeer2 <- subset(demandData, demandData$beerID==2)

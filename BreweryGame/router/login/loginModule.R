@@ -71,8 +71,8 @@ loginModuleServer <- function(id, USER) {
     function(input, output, session) {
       ns <- session$ns
       
-      loginInit <- T
-      gameStartInit <- T
+      loginInit <- F
+      gameStartInit <- F
       finishInit <- F
       signupInit <- F
       id=1

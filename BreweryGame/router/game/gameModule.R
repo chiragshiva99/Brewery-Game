@@ -64,7 +64,6 @@ gameModuleUI <- function(id, disabled=F) {
           fluidRow(
             column(width=2,
                    bs4ValueBoxOutput(ns("day"), width=12),
-                   br(),
                    br()
                    ),
             bs4ValueBoxOutput(ns("money"), width=2),
@@ -82,16 +81,11 @@ gameModuleUI <- function(id, disabled=F) {
                 ),
                 br(),
                 fluidRow(
-                  column(width=4,
-                         numericInput(
-                           ns("advDays"),
-                           label=NULL,
-                           value=10,
-                           min=1,
-                           max=300
-                         )
+                  column(width=5,
+                         htmlOutput(ns("advanceNInput"))
                          ),
-                  column(width=8,
+                  column(width=7,
+                         br(),
                          htmlOutput(ns("advanceNButton"))
                          )
                 )
@@ -125,9 +119,9 @@ gameModuleServer <- function(id, USER) {
         condition=1,
         tankOptions=list(tankNo=6, tankSize=100),
         startingMoney=100000,
-        totalDays=20,
-        endDays=20,
-        initDay=1,
+        totalDays=200,
+        endDays=100,
+        initDay=51,
         interestRate=0.1
       )
       
@@ -211,6 +205,16 @@ gameModuleServer <- function(id, USER) {
       
       ## Advance Button
       
+      output$advanceNInput <- renderUI({
+        numericInput(
+          ns("advDays"),
+          label="Advance N days",
+          value=10,
+          min=1,
+          max=INIT$endDays - general$day + 1
+        )
+      })
+      
       output$advanceNButton <- renderUI({
         actionBttn(
           inputId=ns("advanceN"), 
@@ -226,6 +230,46 @@ gameModuleServer <- function(id, USER) {
       })
       
       observeEvent(input$advanceN, {
+        if(as.integer(input$advDays) != input$advDays) {
+          return(
+            sendSweetAlert(
+              session = session,
+              title = "Key in an Integer !!!",
+              text = NULL,
+              type = "error"
+            )
+          )
+        } 
+        
+        if(input$advDays < 1) {
+          return(
+            sendSweetAlert(
+              session = session,
+              title = "Key in a value larger than 1 !!!",
+              text = NULL,
+              type = "error"
+            )
+          )
+        } 
+        
+        if(input$advDays > (INIT$endDays - general$day)) {
+          return(
+            sendSweetAlert(
+              session = session,
+              title = "Can't Advance beyond Day 390 !!!",
+              text = paste("Key in a value less than", INIT$endDays - general$day),
+              type = "error"
+            )
+          )
+        }
+        
+        sendSweetAlert(
+          session = session,
+          title = "Please wait while the game is advancing",
+          text = NULL,
+          type = "info"
+        )
+        
         for(i in 1:input$advDays) {
           c(USER, AUTO, gameStateData, general, beer, material, demand) %<-% advanceDay(USER, AUTO, gameStateData, general, beer, material, demand, INIT)
         }
@@ -246,6 +290,28 @@ gameModuleServer <- function(id, USER) {
           text <- ""
         }
         text
+      })
+      
+      observeEvent(general$day, {
+        if(general$day == (INIT$endDay + 1)) {
+          sendSweetAlert(
+            session = session,
+            title = "The Game will now simulate for the remaining 100 Days",
+            text = NULL,
+            type = "info"
+          )
+          
+          for(i in 1:100) {
+            c(USER, AUTO, gameStateData, general, beer, material, demand) %<-% advanceDay(USER, AUTO, gameStateData, general, beer, material, demand, INIT)
+          }
+          return()
+        }
+        
+        if(general$day == (INIT$totalDays)) {
+          return(
+            endGameModal(session)
+          )
+        }
       })
       
       ### Inventory

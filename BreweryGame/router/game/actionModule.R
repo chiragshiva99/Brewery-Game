@@ -1,6 +1,10 @@
 actionModuleUI <- function(id) {
   ns <- NS(id)
-  uiOutput(ns("actionTab"))
+  div(
+    h2("Actions"),
+    uiOutput(ns("actionTab"))
+  )
+
 }
 
 actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, costInfo, disabled, AUTO, demand, customerInfo, customerDemand, materialInfo) {
@@ -33,7 +37,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
           automateModuleUI(ns("automate"))
         )
 
-        return(tabBox(title="Actions", id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
+        return(tabBox(id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
       })
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled)

@@ -36,7 +36,7 @@ beerTankModuleServer <- function(id, beer, tanks, AUTO, general) {
         materialSwitch(
           inputId = ns("beerStoreAuto"),
           label = "Auto Storage", 
-          value = AUTO$beerStore,
+          value = (AUTO$beerStore | AUTO$all),
           status = "success",
           right=T
         )

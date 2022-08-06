@@ -24,8 +24,7 @@ totalDemandModuleServer <- function(id, demand, beerInfo, customerInfo) {
       
       output$totalDemand <- renderInfoBox({
         infoBox(
-          nrow(demand$dayDemand),
-          subtitle="No. of Orders",
+          h2(paste(nrow(demand$dayDemand), "Orders")),
           color="lightblue"
         )
       })
@@ -40,8 +39,7 @@ totalDemandModuleServer <- function(id, demand, beerInfo, customerInfo) {
           }
           
           infoBox(
-            amountNeeded,
-            subtitle=paste(beerInfo[i, "name"], "needed"),
+            h2(paste(amountNeeded, beerInfo[i, "name"], "needed")),
             color="secondary",
           )
         })

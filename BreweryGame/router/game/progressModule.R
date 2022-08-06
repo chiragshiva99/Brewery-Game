@@ -1,22 +1,25 @@
 progressModuleUI <- function(id) {
   ns <- NS(id)
-  tabBox(
-    id=ns("progTab"),
-    width=NULL,
-    collapsible=F,
-    tabPanel(
-      title="Material Orders",
-      matProgModuleUI(ns("material"))
-    ),
-    tabPanel(
-      title="Tanks",
-      beerTankModuleUI(ns("beer"))
-    ),
-    tabPanel(
-      title="Total Demand",
-      totalDemandModuleUI(ns("totalDemand"))
+  div(
+    h2("Progress Tracker"),
+    tabBox(
+      id=ns("progTab"),
+      width=NULL,
+      collapsible=F,
+      tabPanel(
+        title="Material Orders",
+        matProgModuleUI(ns("material"))
+      ),
+      tabPanel(
+        title="Tanks",
+        beerTankModuleUI(ns("beer"))
+      ),
+      tabPanel(
+        title="Total Demand",
+        totalDemandModuleUI(ns("totalDemand"))
+      )
+      
     )
-
   )
 }
 

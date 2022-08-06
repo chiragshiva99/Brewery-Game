@@ -15,11 +15,12 @@ getAWSConnection <- function(){
 
 ##Add a dataframe of values to DB
 addToTable <- function(table,dfin){
-  conn <- getAWSConnection()
+
   columns <-  paste0(colnames(dfin), collapse=", ")
   dfin[sapply(dfin, is.character)] <- lapply(dfin[sapply(dfin, is.character)], function(x) paste0("\"",x,"\""))
   print(dfin)
   for (i in 1:nrow(dfin)){
+    conn <- getAWSConnection()
     values <- paste(dfin[i,], collapse=", ")
     query <- paste("INSERT INTO", table, "(", columns, ") VALUES (", values, ")")
     #print(query) #for debug
@@ -38,8 +39,9 @@ addToTable <- function(table,dfin){
       },
       finally = {}
     )
+    dbDisconnect(conn)
   }
-  dbDisconnect(conn)
+
 }
 
 deleteFromTable <- function(table, param) {

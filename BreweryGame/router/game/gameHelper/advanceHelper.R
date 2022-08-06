@@ -322,9 +322,8 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
   gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
   
-  if(general$day == INIT$endDays) {
+  if(general$day == INIT$totalDays) {
     updateCashBalance(USER$id, USER$gameID, general$money)
-    showModal(endGameModal(session))
   }
   
   ## Resetting reactive Values
@@ -334,6 +333,9 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   #### START OF DAY n+1 ####
   
   ## Advance game as required
+  
+  ## Reset Action counter
+  general$action <- 0
   
   general$day <- general$day + 1
   
@@ -428,15 +430,13 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   }
   
   # End game if User is finished
-  if (general$day > INIT$endDays) {
+  if (general$day > INIT$totalDays) {
     USER$finish <- T
     USER$gameID <- -1
     ### update end of game
     result <- updateGameID(USER$id, USER$gameID)
   }
-  
-  ## Reset Action counter
-  general$action <- 0
+
   
   return(
     list(

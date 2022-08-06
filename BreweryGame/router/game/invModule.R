@@ -1,27 +1,29 @@
 invModuleUI <- function(id) {
   ns <- NS(id)
-  tabBox(
-    id=ns("inv"),
-    title="Inventory",
-    width=NULL,
-    collapsible=F,
-    tabPanel(
-      title="All",
-      div(
-        h4("Raw Materials"),
-        matInvUI(ns("material")),
-        br(),
-        h4("Beers"),
-        beerInvUI(ns("beer"))
+  div(
+    h2("Inventory"),
+    tabBox(
+      id=ns("inv"),
+      width=NULL,
+      collapsible=F,
+      tabPanel(
+        title="All",
+        div(
+          h4("Raw Materials"),
+          matInvUI(ns("material")),
+          br(),
+          h4("Beers"),
+          beerInvUI(ns("beer"))
+        )
+      ),
+      tabPanel(
+        title="Material",
+        matInvUI(ns("materialSub"))
+      ),
+      tabPanel(
+        title="Beer",
+        beerInvUI(ns("beerSub"))
       )
-    ),
-    tabPanel(
-      title="Material",
-      matInvUI(ns("materialSub"))
-    ),
-    tabPanel(
-      title="Beer",
-      beerInvUI(ns("beerSub"))
     )
   )
 }

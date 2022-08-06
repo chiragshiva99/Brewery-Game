@@ -30,7 +30,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         materialSwitch(
           inputId = ns("serveCustAuto"),
           label = "Auto Serve", 
-          value = AUTO$serveCust,
+          value = (AUTO$serveCust | AUTO$all),
           status = "success",
           right=T
         )

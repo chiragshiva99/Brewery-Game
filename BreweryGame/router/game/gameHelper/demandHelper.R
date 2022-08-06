@@ -22,10 +22,10 @@ generateTotalDemand <- function(table,days=100) {
   colnames(demand) <- c("Customer","Beer", "Quantity", "Day", "arrivalDay", "maxWait")
   for (i in 1:nrow(table)){
     indivDemand <- generateDemand(table[i, "customerName"], table[i,"meanArrivalTime"], c(table[i,"mean"], table[i, "sd"]),days, table[i, "beerName"], table[i, "waitTime"])
-    print(indivDemand)
+    # print(indivDemand)
     totalDemand <- rbind(totalDemand, indivDemand)
   }
-  print(totalDemand)
+  # print(totalDemand)
   totalDemand
 }
 

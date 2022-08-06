@@ -4,10 +4,16 @@ automateModuleUI <- function(id) {
     fluidRow(
       column(width=4,
              uiOutput(ns("autoSwitch"))
-      ),
-      column(width=7, offset=1,
+      )
+    ),
+    fluidRow(
+      column(width=5,
              uiOutput(ns("autoMaterial")),
-             uiOutput(ns("autoBeer")),
+             uiOutput(ns("autoBeer"))
+      ),
+      column(width=6, offset=1,
+             uiOutput(ns("autoServe")),
+             uiOutput(ns("autoStore"))
       )
     ),
     uiOutput(ns("materialInput")),
@@ -38,6 +44,8 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
           AUTO$all <- input$allAuto
           AUTO$material <- input$allAuto
           AUTO$beer <- input$allAuto
+          AUTO$beerStore <- input$allAuto
+          AUTO$serveCust <- input$allAuto
           
           if(AUTO$all) {
             shinyjs::disable("materialAuto")
@@ -65,27 +73,59 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
         }
       })
       
-      output$autoMaterial <- renderUI({
-        materialSwitch(
-          inputId = ns("materialAuto"),
-          label = "Automate Material Order", 
-          value = (AUTO$material | AUTO$all),
-          status = "success",
-          right=T
-        )
-      })
-      
       observeEvent(input$beerAuto, {
         if(!is.null(input$beerAuto)) {
           AUTO$beer <- input$beerAuto
         }
       })
       
+      observeEvent(input$serveAuto, {
+        if(!is.null(input$serveAuto)) {
+          AUTO$serveCust <- input$serveAuto
+        }
+      })
+      
+      observeEvent(input$storeAuto, {
+        if(!is.null(input$storeAuto)) {
+          AUTO$beerStore <- input$storeAuto
+        }
+      })
+      
+      output$autoMaterial <- renderUI({
+        materialSwitch(
+          inputId = ns("materialAuto"),
+          label = "Auto Material Order", 
+          value = (AUTO$material | AUTO$all),
+          status = "success",
+          right=T
+        )
+      })
+      
       output$autoBeer <- renderUI({
         materialSwitch(
           inputId = ns("beerAuto"),
-          label = "Automate Beer Brewing", 
+          label = "Auto Brewing", 
           value = (AUTO$beer | AUTO$all),
+          status = "success",
+          right=T
+        )
+      })
+      
+      output$autoServe <- renderUI({
+        materialSwitch(
+          inputId = ns("serveAuto"),
+          label = "Auto Serve Customers", 
+          value = (AUTO$serveCust | AUTO$all),
+          status = "success",
+          right=T
+        )
+      })
+      
+      output$autoStore <- renderUI({
+        materialSwitch(
+          inputId = ns("storeAuto"),
+          label = "Auto Store Beer", 
+          value = (AUTO$beerStore | AUTO$all),
           status = "success",
           right=T
         )
@@ -145,12 +185,17 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
           
           if(updateValMat[[paste0("material", materialInfo[i, "name"])]]) {
             supplierInfo <- costInfo %>% subset(materialName==materialInfo[i, "name"])
+            names <- c("Choose a Supplier" = "", supplierInfo[, "supplierName"])
+            
+            supplierChosen <- ifelse(!is.na(AUTO$materialAuto[matIdx, "supplier"]), AUTO$materialAuto[matIdx, "supplier"], "")
+            print(supplierChosen)
             return(
               selectInput(
                 ns(
                 paste0("supplier", materialInfo[i, "name"], "Input")), 
                 label=NULL, 
-                choices=supplierInfo[,"supplierName"]
+                choices=names,
+                selected=supplierChosen
                 )
             )
           } else {
@@ -225,6 +270,16 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo) {
       lapply(1:nrow(materialInfo), function(i) {
         matName <- materialInfo[i, "name"]
         observeEvent(input[[paste0("submitVal", matName)]], {
+          if(input[[paste0("supplier", matName, "Input")]] == "") {
+            return(
+            sendSweetAlert(
+              session = session,
+              title = "No Supplier Chosen !!!",
+              text = NULL,
+              type = "warning"
+            ))
+          }
+          
           updateValMat[[paste0("material", matName)]] <- F
           
           matIdx <- which(AUTO$materialAuto$name == matName)

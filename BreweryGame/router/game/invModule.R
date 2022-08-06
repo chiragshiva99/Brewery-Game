@@ -6,6 +6,8 @@ invModuleUI <- function(id) {
       id=ns("inv"),
       width=NULL,
       collapsible=F,
+      solidHeader=TRUE,
+      status="teal",
       tabPanel(
         title="All",
         div(

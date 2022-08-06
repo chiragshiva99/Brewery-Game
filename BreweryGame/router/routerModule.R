@@ -7,33 +7,33 @@ source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
 
 mytheme <- create_theme(
-  bs4dash_vars(
-    navbar_light_color = "#bec5cb",
-    navbar_light_active_color = "#FFF",
-    navbar_light_hover_color = "#FFF"
-  ),
-  bs4dash_yiq(
-    contrasted_threshold = 10,
-    text_dark = "#FFF", 
-    text_light = "#272c30"
-  ),
-  bs4dash_layout(
-    main_bg = "#353c42"
-  ),
-  bs4dash_sidebar_light(
-    bg = "#272c30", 
-    color = "#bec5cb",
-    hover_color = "#FFF",
-    submenu_bg = "#272c30", 
-    submenu_color = "#FFF", 
-    submenu_hover_color = "#FFF"
-  ),
-  bs4dash_status(
-    primary = "#5E81AC", danger = "#BF616A", light = "#272c30"
-  ),
-  bs4dash_color(
-    gray_900 = "#FFF"
-  ),
+  # bs4dash_vars(
+  #   navbar_light_color = "#bec5cb",
+  #   navbar_light_active_color = "#FFF",
+  #   navbar_light_hover_color = "#FFF"
+  # ),
+  # bs4dash_yiq(
+  #   contrasted_threshold = 10,
+  #   text_dark = "#FFF", 
+  #   text_light = "#272c30"
+  # ),
+  # bs4dash_layout(
+  #   main_bg = "#353c42"
+  # ),
+  # bs4dash_sidebar_light(
+  #   bg = "#272c30", 
+  #   color = "#bec5cb",
+  #   hover_color = "#FFF",
+  #   submenu_bg = "#272c30", 
+  #   submenu_color = "#FFF", 
+  #   submenu_hover_color = "#FFF"
+  # ),
+  # bs4dash_status(
+  #   primary = "#5E81AC", danger = "#BF616A", light = "#272c30"
+  # ),
+  # bs4dash_color(
+  #   gray_900 = "#FFF"
+  # ),
   bs4dash_font(
     size_base="0.8rem",
     weight_bold=900
@@ -59,24 +59,14 @@ routerModuleUI <- function(id) {
           href = "www",
           image = "BeerBoys.jpg",
         ),
-        skin = "light",
-        status = "white",
+        skin = "dark",
+        status = "light",
         border = TRUE,
         sidebarIcon = icon("bars"),
-        controlbarIcon = icon("th"),
+        # controlbarIcon = icon("th"),
         fixed = FALSE,
-        # leftUi = tagList(
-        #   dropdownMenu(
-        #     badgeStatus = "info",
-        #     type = "notifications",
-        #     notificationItem(
-        #       inputId = "triggerAction2",
-        #       text = "Error!",
-        #       status = "danger"
-        #     )
-        #   )
-        # ),
-        rightUi = userOutput(ns("userDropdown"))
+        rightUi = userOutput(ns("userDropdown")),
+        .list = 
       ),
       sidebar = dashboardSidebar(
         collapsed=TRUE, 
@@ -87,15 +77,6 @@ routerModuleUI <- function(id) {
           name = "Save Water, Drink Beer!"
         ),
         uiOutput(ns("sidebarpanel"))
-      ),
-      controlbar = dashboardControlbar(
-        id = NULL,
-        disable = FALSE,
-        width = 250,
-        collapsed = TRUE,
-        overlay = TRUE,
-        skin = "dark",
-        pinned = NULL
       ),
       footer =  dashboardFooter(),
       body = dashboardBody(
@@ -157,16 +138,12 @@ routerModuleServer <- function(id) {
       output$userDropdown <- renderUser({
         req(USER$login)
         dashboardUser(
-          name = "Divad Nojnarg",
-          image = "https://adminlte.io/themes/AdminLTE/dist/img/user2-160x160.jpg",
-          title = "shinydashboardPlus",
-          subtitle = "Author",
-          footer = p("The footer", class = "text-center"),
-          fluidRow(
-            dashboardUserItem(
-              width=18,
-              uiOutput(ns("logoutbtn"))
-            )
+          name = USER$username,
+          image = 'BeerBoys.jpg',
+          title= USER$username,
+          dashboardUserItem(
+            width=18,
+            uiOutput(ns("logoutbtn"))
           )
         )
       })
@@ -185,12 +162,12 @@ routerModuleServer <- function(id) {
         counter <- 0
         if(USER$login == T) {
           counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("dashboard"))
+          sidebarMenuItems[[counter]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("user"))
         }
         
         if (USER$gameStart == T) {
           counter <- counter + 1
-          sidebarMenuItems[[counter]] <- menuItem("Main Page", tabName = "gameTab", icon = icon("dashboard"))
+          sidebarMenuItems[[counter]] <- menuItem("Main Page", tabName = "gameTab", icon = icon("gamepad"))
         }
         
         if ((USER$finish == T | USER$finish == F) & USER$gameStart == T) {

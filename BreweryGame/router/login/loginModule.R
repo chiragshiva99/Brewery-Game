@@ -9,28 +9,33 @@ loginModuleUI <- function(id) {
 loginpage <- function(ns) {
   div(id = "loginpage", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
       wellPanel(
-        tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;color:#333; font-weight:600;"),
+        tags$h1("BEER-FIELD", class = "text-center", style = "padding-top: 0; font-weight:300;"),
+        tags$h1("Technologies", class = "text-center", style = "padding-top: 0; font-weight:300;"),
+        br(),
+        tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;"),
         textInput(ns("username"), placeholder="Username", label = tagList(icon("user"), "Username")),
         passwordInput(ns("password"), placeholder="Password", label = tagList(icon("unlock-alt"), "Password")),
         br(),
         div(
           style = "text-align: center;",
-          actionButton(ns("login"), "LOG IN", style = "color: white; background-color:#3c8dbc;
-                                 padding: 10px 15px; width: 150px; cursor: pointer;
-                                 font-size: 18px; font-weight: 600;"),
+          actionBttn(ns("login"), 
+                     "LOG IN", 
+                     style="material-flat",
+                     color="primary"),
           br(),
-          actionButton(ns("signup"), "Sign Up"),
+          br(),
+          actionBttn(ns("signup"), 
+                     "Sign up",
+                     style = "minimal",
+                     color="warning",
+                     size="sm"
+          ),
           shinyjs::hidden(
             div(id = ns("nomatch"),
                 tags$p("Oops! Incorrect username or password!",
                        style = "color: red; font-weight: 600; 
                                             padding-top: 5px;font-size:16px;", 
-                       class = "text-center"))),
-          br(),
-          br(),
-          tags$code("Username: G  Password: mypass"),
-          br(),
-          tags$code("Username: myuser1  Password: mypass1")
+                       class = "text-center")))
         ))
   )
 }
@@ -38,17 +43,24 @@ loginpage <- function(ns) {
 signuppage <- function(ns) {
   div(id = "signuppage", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
       wellPanel(
-        tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;color:#333; font-weight:600;"),
+        tags$h2("SIGN UP", class = "text-center", style = "padding-top: 0;"),
         textInput(ns("usernameSignup"), placeholder="Username", label = tagList(icon("user"), "Username")),
         passwordInput(ns("passwordSignup"), placeholder="Password", label = tagList(icon("unlock-alt"), "Password")),
         br(),
         div(
           style = "text-align: center;",
-          actionButton(ns("signupok"), "SIGN UP", style = "color: white; background-color:#3c8dbc;
-                                 padding: 10px 15px; width: 150px; cursor: pointer;
-                                 font-size: 18px; font-weight: 600;"),
+          actionBttn(ns("signupok"), 
+                    "SIGN UP", 
+                    style="material-flat",
+                    color="primary"),
           br(),
-          actionButton(ns("loginReturn"), "Log In instead"),
+          br(),
+          actionBttn(ns("loginReturn"), 
+                     "Log In instead",
+                     style = "minimal",
+                     color="warning",
+                     size="sm"
+                     ),
           shinyjs::hidden(
             div(id = ns("userNotAvail"),
                 tags$p("Oops! Username Not Available!",
@@ -77,7 +89,8 @@ loginModuleServer <- function(id, USER) {
       signupInit <- F
       id=1
       gameID=-1
-      USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, signup=signupInit, selectedTab = NULL)
+      username=NA
+      USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, signup=signupInit, selectedTab = NULL, username=username)
       
       observe({ 
         if (USER$login == FALSE) {
@@ -94,7 +107,7 @@ loginModuleServer <- function(id, USER) {
                   USER$login <- TRUE
                   USER$gameID <- credentials["curGameID"][which(credentials$username==Username),]
                   USER$id <- credentials["userID"][which(credentials$username==Username),]
-                
+                  USER$username <- Username
                 } else {
                   shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade")
                   shinyjs::delay(3000, shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade"))

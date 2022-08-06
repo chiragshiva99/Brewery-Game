@@ -37,7 +37,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
           automateModuleUI(ns("automate"))
         )
 
-        return(tabBox(id=ns("action"), width=NULL, collapsible=F, .list=actionTabs))
+        return(tabBox(id=ns("action"), width=NULL, collapsible=F, solidHeader=TRUE,status="maroon", .list=actionTabs))
       })
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled)

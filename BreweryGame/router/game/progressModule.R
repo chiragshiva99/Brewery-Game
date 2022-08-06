@@ -6,6 +6,8 @@ progressModuleUI <- function(id) {
       id=ns("progTab"),
       width=NULL,
       collapsible=F,
+      solidHeader=TRUE,
+      status="warning",
       tabPanel(
         title="Material Orders",
         matProgModuleUI(ns("material"))

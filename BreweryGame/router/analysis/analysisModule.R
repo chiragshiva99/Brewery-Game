@@ -6,6 +6,8 @@ analysisModuleUI <- function(id) {
     tabName = "analysisTab",
     fluidRow(
       h1("Analysis!!"),
+    ),
+    fluidRow(
       box(
         title="Money",
         plotlyOutput(ns("moneyPlot"))

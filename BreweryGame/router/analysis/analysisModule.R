@@ -2,6 +2,12 @@ source("router/analysis/analysisHelper.R")
 
 # Split plots into Modules
 source("router/analysis/demandPlot/demandPlotModule.R")
+source("router/analysis/lostPlot/lostPlotModule.R")
+source("router/analysis/beerPlot/beerPlotModule.R")
+source("router/analysis/materialPlot/materialPlotModule.R")
+
+
+
 
 analysisModuleUI <- function(id) {
   ns <- NS(id)
@@ -21,6 +27,8 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Beer inventory levels",
+        # # call beerPlotModule in UI
+        # demandPlotModuleUI(ns("beer"))
         plotlyOutput(ns("beerPlot"))
       ),
       box(
@@ -30,10 +38,14 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Material inventory Levels",
+        # # call materialPlotModule in UI
+        # demandPlotModuleUI(ns("material"))
         plotlyOutput(ns("materialPlot"))
       ),
       box(
         title="Lost Sales",
+        # # call lostPlotModule in UI
+        # demandPlotModuleUI(ns("lost"))
         plotlyOutput(ns("lostPlot"))
       )
       
@@ -71,11 +83,11 @@ analysisModuleServer <- function(id, stateData, input, output) {
       output$lostPlot <- renderPlotly({
         lostSales <- subset(stateData$demand, serviceDay == -1)
         lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
-        
+
         p <- ggplot(data=lostBeer, mapping=aes(gameDay, lostSale, fill=as.factor(beerID))) +
-          geom_bar(position="stack", stat="identity") + 
+          geom_bar(position="stack", stat="identity") +
           darkTheme
-        
+
         ggplotly(p)
       })
       

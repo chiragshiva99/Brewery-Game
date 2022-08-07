@@ -54,7 +54,7 @@ routerModuleUI <- function(id) {
 
       
       header = dashboardHeader(
-        h3("Beer-field Technologies", style="color:#ffffff"),
+        h3("Littlefield Brewery", style="color:#ffffff"),
         title = dashboardBrand(
           title = "The Brewery Game",
           color = "primary",

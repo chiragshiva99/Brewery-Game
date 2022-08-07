@@ -1,9 +1,3 @@
-library(ggplot2)
-library(ggdark)
-library(plotly)
-library(ggalt)
-library(vistime)
-
 darkTheme <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_size = 14) + 
   theme(plot.title = element_text(family = "Fira Sans Condensed"),
         plot.background = element_rect(fill = "grey25"),

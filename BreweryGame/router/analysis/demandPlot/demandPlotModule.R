@@ -62,25 +62,24 @@ demandPlotModuleServer <- function(id, demand, beerInfo, customerInfo) {
         group <- input$group
         # Depending on the group selected
         
-        demandData <- demand
-        demandData <- demandData %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+        originalData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
         
         # Initializes the variables based on the group
         if(is.null(group)) {
           legendTitle <- "Beer"
           selected <- input$beerSelect
           otherSelect <- input$customerSelect
-          demandData <- demandData %>% rename(variable1=beerName, variable2=customerName)
+          demandData <- originalData %>% rename(variable1=beerName, variable2=customerName)
         } else if(group == "Beer") {
           legendTitle <- "Beer"
           selected <- input$beerSelect
           otherSelect <- input$customerSelect
-          demandData <- demandData %>% rename(variable1=beerName, variable2=customerName)
+          demandData <- originalData %>% rename(variable1=beerName, variable2=customerName)
         } else {
           legendTitle <- "Customer"
           selected <- input$customerSelect
           otherSelect <- input$beerSelect
-          demandData <- demandData %>% rename(variable1=customerName, variable2=beerName)
+          demandData <- originalData %>% rename(variable1=customerName, variable2=beerName)
         }
           
         ## Initializes a dataframe of the same type as demandData

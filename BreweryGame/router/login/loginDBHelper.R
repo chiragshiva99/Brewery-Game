@@ -27,10 +27,18 @@ getUserID <- function(username, connect=NULL) {
     conn <- connect
   }
   
-  queryTemplate <- "SELECT userID FROM userInfo WHERE username=?id1;"
+  queryTemplate <- "SELECT userID FROM userInfo WHERE username=?id1"
   query <- sqlInterpolate(conn, queryTemplate, id1=username)
   result <- dbGetQuery(conn, query)
-  
+  # print(result)
+
+  # prevent SQL insertion attacks
+  if (nrow(result)==1){
+    return(result)
+  } else {
+    print(result) #for debugging
+    userid <- 0
+  }
   if (is.null(connect)) {
     dbDisconnect(conn)
   }
@@ -48,7 +56,7 @@ registerUser <- function(username, password){
   
 
   query <- createNewUserQuery(conn, username, password)
-  print(query) #for debug
+  # print(query) #for debug
   success <- F
   #CHECK SUCCESS WHILE LOOP
   tryCatch(

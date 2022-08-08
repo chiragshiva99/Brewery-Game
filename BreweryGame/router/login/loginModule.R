@@ -160,6 +160,7 @@ loginModuleServer <- function(id, USER) {
             USER$login <- T
             USER$signup <- F
             USER$id <- userID
+            USER$username <- username
           }
         }
       })

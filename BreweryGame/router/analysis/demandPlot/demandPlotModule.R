@@ -101,7 +101,7 @@ demandPlotModuleServer <- function(id, stateData, beerInfo, customerInfo) {
             graphData <- subset(demandData, variable1 %in% selected)
             
             titleText <- substr(titleText, 1, nchar(titleText) - 4)
-            titleText <- paste0(titleText, paste0(beerSelected, collapse=", "), ".")
+            titleText <- paste0(titleText, paste0(selected, collapse=", "), ".")
           }
         
         }

@@ -28,19 +28,22 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
         beerOptions <- c("All", beerOptions)
         
         div(
+          checkboxGroupButtons(
+            inputId = ns("statusSelect"),
+            label = "Choose by Status",
+            choiceNames = c("Both", "Inventory", "Brewing"),
+            choiceValues = c("total", "inventory", "inTank"),
+            selected = "total",
+            justified = TRUE,
+            checkIcon = list(
+              yes = icon("ok",
+                         lib = "glyphicon"))
+          ),
           awesomeCheckboxGroup(
             inputId = ns("beerSelect"),
             label = "Choose by Beer", 
             choices = beerOptions,
             selected = "All",
-            inline = TRUE, 
-            status = "primary"
-          ),
-          awesomeCheckboxGroup(
-            inputId = ns("statusSelect"),
-            label = "Choose by Status", 
-            choices = c("Both", "Brewing", "Completed"),
-            selected = "Both",
             inline = TRUE, 
             status = "primary"
           )
@@ -51,12 +54,39 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
         beer <- stateData$beer
         beerData <- beer %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name)
         
+        beerData$total <- beerData$inTank + beerData$inventory
         
+        selected <- input$statusSelect
         
-        p <- ggplot(beerData, aes(gameDay)) + 
-          geom_step(aes(y=inventory, color=Beer), size = 1) + 
+        beerSelected <- input$beerSelect
+        
+        if(is.null(selected)) {
+          plotData <- beerData[,c("gameDay", "Beer", "total")]
+        } else {
+          plotData <- beerData[,c("gameDay", "Beer", selected)]
+        }
+        
+        if(!is.null(beerSelected)) {
+          if(beerSelected[1] != "All") {
+            plotData <- subset(plotData, Beer %in% beerSelected)
+          }
+        }
+
+        
+        p <- ggplot(plotData, aes(gameDay))
+        if ("inventory" %in% selected) {
+          p <- p + geom_step(aes(y=inventory, color=Beer), size=1)
+        }
+        
+        if ("inTank" %in% selected) {
+          p <- p + geom_step(aes(y=inTank, color=Beer), size=1)
+        }
+        
+        if ("total" %in% selected | is.null(selected)) {
+          p <- p + geom_step(aes(y=total, color=Beer), size=1)
+        }
           # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
-          geom_text(mapping=aes(0, y = 50,label = "Recommended Brewing Point", vjust = -1, hjust = 0), color = 'white') +
+        p <- p + geom_text(mapping=aes(0, y = 50,label = "Recommended Brewing Point", vjust = -1, hjust = 0), color = 'white') +
           labs(title="Beer Inventory Level", 
                x = "Game Day",
                y = "Inventory"

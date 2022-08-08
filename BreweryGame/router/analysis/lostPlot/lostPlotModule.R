@@ -14,23 +14,52 @@ lostPlotModuleUI <- function(id) {
   )
 }
 
-lostPlotModuleServer <- function(id, stateData, beerInfo){
+lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
   moduleServer(
     id, 
     function(input, output, session){
       ns <- session$ns
       
       output$lostInput <- renderUI({
-        ## Get options to put in checkboxGroup
-        beerOptions <- beerInfo[, "name"]
-        ## Add the select All option
-        beerOptions <- c("All", beerOptions)
         
         div(
+          radioGroupButtons(
+            inputId = ns("statusSelect"),
+            label = "Choose by Status",
+            choices = c("Beer", "Customer"),
+            selected = "Beer",
+            justified = TRUE,
+            checkIcon = list(
+              yes = icon("ok",
+                         lib = "glyphicon"))
+          ),
+          htmlOutput(ns("furtherDetail"))
+        )
+      })
+      
+      output$furtherDetail <- renderUI({
+
+        
+        if(input$statusSelect == "Beer") {
+          ## Get options to put in checkboxGroup
+          options <- beerInfo[, "name"]
+          ## Add the select All option
+          options <- c("All", options)
+          label <- "Choose By Beer"
+          
+          } else {
+            ## Get options to put in checkboxGroup
+            options <- customerInfo[, "name"]
+            ## Add the select All option
+            options <- c("All", options)
+            label <- "Choose by Customer"
+          }
+        
+        return(
           awesomeCheckboxGroup(
-            inputId = ns("beerSelect"),
-            label = "Choose by Beer", 
-            choices = beerOptions,
+            inputId = ns("typeSelect"),
+            label = label, 
+            choices = options,
             selected = "All",
             inline = TRUE, 
             status = "primary"
@@ -42,8 +71,38 @@ lostPlotModuleServer <- function(id, stateData, beerInfo){
         lostSales <- subset(stateData$demand, serviceDay == -1)
         lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
         
-        p <- ggplot(data=lostBeer, mapping=aes(gameDay, lostSale, fill=as.factor(beerID))) +
+        selected <- input$statusSelect
+        furtherSelect <- input$typeSelect
+        
+        if(is.null(selected)) {
+          selected <- "Beer"
+        }
+        
+        if(selected == "Beer") {
+          graphData <- lostBeer %>% left_join(beerInfo, by=c("beerID"))
+          label = "Beer"
+        } else {
+          graphData <- lostSales %>% left_join(customerInfo, by=c("customerID")) %>% count(gameDay, name) %>% rename(lostSale=n)
+          label = "Customer"
+        }
+        graphData <- graphData %>% rename(variable=name)
+        print(graphData)
+        plotData <- graphData
+        print(furtherSelect)
+        
+        if(!is.null(furtherSelect)) {
+          if(furtherSelect[1] != "All") {
+            plotData <- subset(graphData, variable %in% furtherSelect)
+          }
+        }
+        print(plotData)
+        p <- ggplot(data=plotData, mapping=aes(gameDay, lostSale, fill=variable)) +
           geom_bar(position="stack", stat="identity") +
+          labs(title="Beer Inventory Level", 
+               x = "Game Day",
+               y = "Inventory",
+               fill = label
+          ) + 
           darkTheme
         
         ggplotly(p)

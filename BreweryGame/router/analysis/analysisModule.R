@@ -27,9 +27,7 @@ analysisModuleUI <- function(id) {
       ),
       box(
         title="Beer inventory levels",
-        # # call beerPlotModule in UI
-        # demandPlotModuleUI(ns("beer"))
-        plotlyOutput(ns("beerPlot"))
+        beerPlotModuleUI(ns("beer"))
       ),
       box(
         title="Beer Demand",
@@ -39,14 +37,11 @@ analysisModuleUI <- function(id) {
       box(
         title="Material inventory Levels",
         # # call materialPlotModule in UI
-        # demandPlotModuleUI(ns("material"))
-        plotlyOutput(ns("materialPlot"))
+        materialPlotModuleUI(ns("material"))
       ),
       box(
         title="Lost Sales",
-        # # call lostPlotModule in UI
-        # demandPlotModuleUI(ns("lost"))
-        plotlyOutput(ns("lostPlot"))
+        lostPlotModuleUI(ns("lost"))
       )
       
     )
@@ -64,7 +59,10 @@ analysisModuleServer <- function(id, stateData, input, output) {
       customerInfo <- getCustomerInfo()
       
       # Call demandPlot Module in Server
-      demandPlotModuleServer("demand", stateData$demand, beerInfo, customerInfo)
+      demandPlotModuleServer("demand", stateData, beerInfo, customerInfo)
+      beerPlotModuleServer("beer", stateData, beerInfo)
+      lostPlotModuleServer("lost", stateData, beerInfo)
+      materialPlotModuleServer("material", stateData, materialInfo)
       
       output$moneyPlot <- renderPlotly({
         print(stateData$cash)
@@ -80,52 +78,6 @@ analysisModuleServer <- function(id, stateData, input, output) {
         ggplotly(p)
       })
       
-      output$lostPlot <- renderPlotly({
-        lostSales <- subset(stateData$demand, serviceDay == -1)
-        lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
-
-        p <- ggplot(data=lostBeer, mapping=aes(gameDay, lostSale, fill=as.factor(beerID))) +
-          geom_bar(position="stack", stat="identity") +
-          darkTheme
-
-        ggplotly(p)
-      })
-      
-      output$beerPlot <- renderPlotly({
-        # print(stateData$beer)
-        beerData <- stateData$beer
-        beerData <- beerData %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name)
-        
-        p <- ggplot(beerData, aes(gameDay)) + 
-          geom_step(aes(y=inventory, color=Beer), size = 1) + 
-          # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
-          geom_text(mapping=aes(0, y = 50,label = "Recommended Brewing Point", vjust = -1, hjust = 0), color = 'white') +
-          labs(title="Beer Inventory Level", 
-               x = "Game Day",
-               y = "Inventory"
-          )+darkTheme
-        
-        ggplotly(p)
-      })
-      
-      output$materialPlot <- renderPlotly({
-        # print(stateData$mat)
-        materialData <- stateData$mat
-        materialData <- materialData %>% left_join(materialInfo, by=c("materialID")) %>% rename(Material=name)
-        materialData$Material <- ifelse(materialData$materialID==1, "Malt", ifelse(materialData$materialID==2, "Hops", "Yeast"))
-        
-        p <- ggplot(materialData, aes(gameDay)) + 
-          geom_step(aes(y=inventory, color=Material), size= 1) + 
-          # geom_line(aes(y=inTransit, color=Material)) +
-          # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 1, alpha = 0.8) +
-          geom_text(mapping=aes(0, y = 100,label = "Recommended Raw-Material Reorder Point", vjust = -1, hjust = -1), color = 'white') +
-          labs(title="Raw Material Inventory Level", 
-               x = "Game Day",
-               y = "Inventory"
-          ) + darkTheme
-        
-        ggplotly(p)
-      })
     }
   )
 }

@@ -14,14 +14,11 @@ materialPlotModuleUI <- function(id) {
   )
 }
 
-materialPlotModuleServer <- function(id, material, materialInfo, statusInfo){
+materialPlotModuleServer <- function(id, stateData, materialInfo){
   moduleServer(
     id, 
     function(input, output, session){
       ns <- session$ns
-      
-      materialInfo <- getMaterialInfo()
-      # statuslInfo <-
       
       output$materialInput <- renderUI({
         ## Get options to put in checkboxGroup
@@ -45,7 +42,7 @@ materialPlotModuleServer <- function(id, material, materialInfo, statusInfo){
           awesomeCheckboxGroup(
             inputId = ns("materialSelect"),
             label = "Choose by Status", 
-            choices =  c("Yet to arrive", "Arrived"),  #check
+            choices =  c("All" ,"Inventory", "Orders"),  #check
             selected = "All",
             inline = TRUE, 
             status = "primary"
@@ -53,7 +50,23 @@ materialPlotModuleServer <- function(id, material, materialInfo, statusInfo){
         )
       })
       
-      output$materialPlot <- renderPlotly({})
+      output$materialPlot <- renderPlotly({
+        # print(stateData$mat)
+        material <- stateData$mat
+        materialData <- material %>% left_join(materialInfo, by=c("materialID")) %>% rename(Material=name)
+        
+        p <- ggplot(materialData, aes(gameDay)) + 
+          geom_step(aes(y=inventory, color=Material), size= 1) + 
+          # geom_line(aes(y=inTransit, color=Material)) +
+          # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 1, alpha = 0.8) +
+          geom_text(mapping=aes(0, y = 100,label = "Recommended Raw-Material Reorder Point", vjust = -1, hjust = -1), color = 'white') +
+          labs(title="Raw Material Inventory Level", 
+               x = "Game Day",
+               y = "Inventory"
+          ) + darkTheme
+        
+        ggplotly(p)
+      })
       
     }
   )

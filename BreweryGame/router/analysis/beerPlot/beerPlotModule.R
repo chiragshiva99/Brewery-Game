@@ -14,24 +14,18 @@ beerPlotModuleUI <- function(id) {
   )
 }
 
-beerPlotModuleServer <- function(id, beer, beerInfo, statusInfo){
+beerPlotModuleServer <- function(id, stateData, beerInfo){
   moduleServer(
     id, 
     function(input, output, session) {
       ns <- session$ns
       
-      beerInfo <- getBeerInfo()
-      # statuslInfo <-
       
       output$beerInput <- renderUI({
         ## Get options to put in checkboxGroup
         beerOptions <- beerInfo[, "name"]
         ## Add the select All option
         beerOptions <- c("All", beerOptions)
-        
-        # Same but for status
-        ## ---------- Function of Brewing or Completed
-        # statusOptions <-
         
         div(
           awesomeCheckboxGroup(
@@ -45,15 +39,31 @@ beerPlotModuleServer <- function(id, beer, beerInfo, statusInfo){
           awesomeCheckboxGroup(
             inputId = ns("statusSelect"),
             label = "Choose by Status", 
-            choices = c("Brewing", "Completed"),
-            selected = "All",
+            choices = c("Both", "Brewing", "Completed"),
+            selected = "Both",
             inline = TRUE, 
             status = "primary"
           )
         )
       })
       
-      output$beerPlot <- renderPlotly({})
+      output$beerPlot <- renderPlotly({
+        beer <- stateData$beer
+        beerData <- beer %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name)
+        
+        
+        
+        p <- ggplot(beerData, aes(gameDay)) + 
+          geom_step(aes(y=inventory, color=Beer), size = 1) + 
+          # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
+          geom_text(mapping=aes(0, y = 50,label = "Recommended Brewing Point", vjust = -1, hjust = 0), color = 'white') +
+          labs(title="Beer Inventory Level", 
+               x = "Game Day",
+               y = "Inventory"
+          )+darkTheme
+        
+        ggplotly(p)
+      })
       
     }
   )

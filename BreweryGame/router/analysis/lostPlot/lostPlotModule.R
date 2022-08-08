@@ -14,13 +14,11 @@ lostPlotModuleUI <- function(id) {
   )
 }
 
-lostPlotModuleServer <- function(id, lost, beerInfo){
+lostPlotModuleServer <- function(id, stateData, beerInfo){
   moduleServer(
     id, 
     function(input, output, session){
       ns <- session$ns
-      
-      beerInfo <- getBeerInfo()
       
       output$lostInput <- renderUI({
         ## Get options to put in checkboxGroup
@@ -40,7 +38,16 @@ lostPlotModuleServer <- function(id, lost, beerInfo){
         )
       })
       
-      output$lostPlot <- renderPlotly({})
+      output$lostPlot <- renderPlotly({
+        lostSales <- subset(stateData$demand, serviceDay == -1)
+        lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
+        
+        p <- ggplot(data=lostBeer, mapping=aes(gameDay, lostSale, fill=as.factor(beerID))) +
+          geom_bar(position="stack", stat="identity") +
+          darkTheme
+        
+        ggplotly(p)
+      })
       
     }
   )

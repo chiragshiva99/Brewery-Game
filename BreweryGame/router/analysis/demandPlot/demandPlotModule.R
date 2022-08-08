@@ -14,7 +14,7 @@ demandPlotModuleUI <- function(id) {
   )
 }
 
-demandPlotModuleServer <- function(id, demand, beerInfo, customerInfo) {
+demandPlotModuleServer <- function(id, stateData, beerInfo, customerInfo) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -61,7 +61,7 @@ demandPlotModuleServer <- function(id, demand, beerInfo, customerInfo) {
         ## selected is a vector of all the options selected by the user
         group <- input$group
         # Depending on the group selected
-        
+        demand <- stateData$demand
         originalData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
         
         # Initializes the variables based on the group
@@ -86,41 +86,24 @@ demandPlotModuleServer <- function(id, demand, beerInfo, customerInfo) {
         graphData <- demandData[0,]
         
         # Initialize the starting string for the title
-        titleText <- "Demand for "
+        titleText <- "Demand for Beer"
         
         ## This is gonna be very inefficient but I will subset and build graphData up from the ground based on the selected variables
         if(is.null(selected)) {
           # Use the full dataframe
           graphData <- demandData
-          # Exit the loop
-          ## Set the title name to be default
-          titleText <- "Demand for Beer"
+
         } else {
-          for(i in selected) {
-            # if all is selected, break the loop and just plot
-            if(i == "All") {
-              # Use the full dataframe
-              graphData <- demandData
-              # Exit the loop
-              ## Set the title name to be default
-              titleText <- "Demand for Beer"
-              break
-            }
-            # Subset demandData according to the selected beer and add to graphData
-            subsetData <- subset(demandData, variable1 == i)
+          if(selected[1] == "All") {
+            graphData <- demandData
             
-            # If subsetData contains data then rbind
-            if(nrow(subsetData) > 0) {
-              graphData <- rbind(graphData, subsetData)
-            }
-            # Add the beername to the title
-            titleText <- paste0(titleText, " ", i, ", ")
+          } else {
+            graphData <- subset(demandData, variable1 %in% selected)
+            
+            titleText <- substr(titleText, 1, nchar(titleText) - 4)
+            titleText <- paste0(titleText, paste0(beerSelected, collapse=", "), ".")
           }
-          # If "All" is not selected, remove comma
-          if(selected[1] != "All") {
-            # Remove the comma at the end
-            titleText <- substr(titleText, 1, nchar(titleText)-2)
-          }
+        
         }
         
         # Final Filter
@@ -130,14 +113,10 @@ demandPlotModuleServer <- function(id, demand, beerInfo, customerInfo) {
         if(is.null(otherSelect)) {
           finalData <- graphData
         } else {
-          for(i in otherSelect) { 
-            if( i == "All") {
-              finalData <- graphData
-            }
-            subsetData <- subset(graphData, variable2 == i)
-            if(nrow(subsetData) > 0) {
-              finalData <- rbind(finalData, subsetData)
-            }
+          if(otherSelect[1] == "All") {
+            finalData <- graphData
+          } else {
+            finalData <- subset(graphData, variable2 %in% otherSelect)
           }
         }
         

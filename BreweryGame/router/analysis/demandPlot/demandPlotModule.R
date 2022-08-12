@@ -40,7 +40,7 @@ demandPlotModuleServer <- function(id, stateData, beerInfo, customerInfo) {
           paste0('demandData-Day-',max(stateData$cash$gameDay))
         },
         content=function(con) {
-          demandData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          demandData <- stateData$demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
           
           write.csv(demandData, con)
         }

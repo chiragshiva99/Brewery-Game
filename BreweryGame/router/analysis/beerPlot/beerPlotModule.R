@@ -46,7 +46,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
           paste0('beerData-Day-',max(stateData$cash$gameDay))
         },
         content=function(con) {
-          beerData <- beer %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name) %>% select(gameDay, Beer, inventory, inTank)
+          beerData <- stateData$beer %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name) %>% select(gameDay, Beer, inventory, inTank)
           
           write.csv(beerData, con)
         }

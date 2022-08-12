@@ -247,6 +247,36 @@ completeMaterialOrder <- function(material, AUTO) {
   )
 }
 
+calculateHoldingCost <- function(beer, material, INIT) {
+  beerHolding <- 0
+  for(drink in INIT$beerInfo[,"name"]) {
+    invIdx <- which(beer$beerInv[, "name"] == drink)
+    qty <- beer$beerInv[invIdx, "qty"]
+    
+    infoIdx <- which(INIT$beerInfo[,"name"] == drink)
+    cost <- INIT$beerInfo[infoIdx, "holdingCost"]
+    
+    beerHolding <- beerHolding + qty*cost
+  }
+  
+  
+  matHolding <- 0
+  for(mat in INIT$materialInfo[,"name"]) {
+    invIdx <- which(material$rawMatQty[, "name"] == mat)
+    qty <- material$rawMatQty[invIdx, "qty"]
+    
+    infoIdx <- which(INIT$materialInfo[,"name"] == mat)
+    cost <- INIT$materialInfo[infoIdx, "holdingCost"]
+    
+    matHolding <- matHolding + qty*cost
+  }
+  
+  holdingCost <- beerHolding + matHolding
+  
+  return(holdingCost)
+  
+}
+
 advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, demand, INIT) {
   ## Store seed if game started
   print(paste("Advancing for day", general$day))
@@ -280,8 +310,13 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   ## UPDATE STATES TO DATABASE
   dayCashDF <- INIT$cashState
   
+  # holding Cost
+  holdingCost <- calculateHoldingCost(beer, material, INIT)
+  general$money <- general$money - holdingCost
+  general$holdingCost <- general$holdingCost + holdingCost
+  
   ## Get interest
-  general$money <- general$money * (1 + (INIT$interestRate/365))
+  general$money <- general$money * (1 + (INIT$interestRate/365)) 
   
   # Store Cash Statuses
   data <- list()
@@ -289,6 +324,11 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   data$cashBalance <- general$money
   data$revenue <- general$dayRevenue
   data$lostRev <- lostRev
+  
+  
+  data$holdingCost <- holdingCost
+  
+  general$lostRev <- general$lostRev + lostRev
   
   dayCashDF <- rbind(dayCashDF, data)
   dayCashDF <- cbind(getBaseData(USER$gameID, USER$id, nrow(dayCashDF)), dayCashDF)
@@ -334,6 +374,8 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   gameStateData$demand <- addToGameState(gameStateData$demand, demand$dayDemandDF)
   gameStateData$cash <- addToGameState(gameStateData$cash, dayCashDF)
   gameStateData$tank <- addToGameState(gameStateData$tank, dayTankDF)
+  
+  
   
   if(general$day == INIT$totalDays) {
     updateCashBalance(USER$id, USER$gameID, general$money)

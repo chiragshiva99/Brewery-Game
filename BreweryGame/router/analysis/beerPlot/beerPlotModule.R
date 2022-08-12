@@ -86,8 +86,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
           p <- p + geom_step(aes(y=total, color=Beer), size=1)
         }
           # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
-        p <- p + geom_text(mapping=aes(0, y = 50,label = "Recommended Brewing Point", vjust = -1, hjust = 0), color = 'white') +
-          labs(title="Beer Inventory Level", 
+        p <- p + labs(title="Beer Inventory Level", 
                x = "Game Day",
                y = "Inventory"
           )+darkTheme

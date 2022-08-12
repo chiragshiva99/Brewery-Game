@@ -54,7 +54,8 @@ resetGameArgs <- function(INIT, gameStateData, AUTO, general, beer, material, de
   general$day <- INIT$initDay
   general$dayRevenue <- 0
   general$action <- 0
-  general$maxAction <- 3
+  general$holdingCost <- 0
+  general$lostRev <- 0
   
   #beer
   beer$tanks <- INIT$tanks

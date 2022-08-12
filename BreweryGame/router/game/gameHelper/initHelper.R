@@ -93,7 +93,7 @@ initGameArgs <- function(INIT) {
   
   
   # Reactive Values
-  general <- reactiveValues(money=INIT$startingMoney, day=INIT$initDay, dayRevenue=0, action=0, maxAction=3)
+  general <- reactiveValues(money=INIT$startingMoney, day=INIT$initDay, dayRevenue=0, action=0, maxAction=3, holdingCost=0, lostRev=0)
   beer <- reactiveValues(tanks=INIT$tanks, beerInv=INIT$beerInv)
   material <- reactiveValues(rawMatOrder=INIT$rawMatOrder, rawMatQty=INIT$rawMatQty)
   demand <- reactiveValues(dayDemand=dayDemand, lostCust=0, lostPerBeer=INIT$lostPerBeer,   dayDemandDF=INIT$demandState)

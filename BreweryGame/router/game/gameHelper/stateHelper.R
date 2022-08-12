@@ -19,7 +19,7 @@ initRawMatOrder <- function() {
 }
 
 createCashStateDF <- function() {
-  return(createEmptyDF( c("gameDay", "cashBalance", "revenue", "lostRev")))
+  return(createEmptyDF( c("gameDay", "cashBalance", "revenue", "lostRev", "holdingCost")))
 }
 
 createBeerStateDF <- function() {

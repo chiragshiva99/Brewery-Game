@@ -162,7 +162,14 @@ gameModuleServer <- function(id, USER) {
           "Cash Balance",
           icon=icon("dollar-sign"),
           color="success",
-          gradient=T
+          gradient=T,
+          footer = div(
+            strong("Incurred Costs"),
+            br(),
+            paste0("Lost Revenue: $", general$lostRev),
+            br(),
+            paste0("Holding Cost: $", general$holdingCost),
+          )
         )
       })
       
@@ -237,6 +244,21 @@ gameModuleServer <- function(id, USER) {
       
       observeEvent(input$advance, {
         c(USER, AUTO, gameStateData, general, beer, material, demand) %<-% advanceDay(USER, AUTO, gameStateData, general, beer, material, demand, INIT)
+        
+        addTooltip(
+          id="money",
+          options=list(
+            title=div(
+              strong("Incurred Costs"),
+              br(),
+              paste0("Lost Revenue: ", general$lostRev),
+              br(),
+              paste0("Holding Cost: ", general$holdingCost),
+            ),
+            placement="bottom"
+          ),
+          session=session
+        )
       })
       
       observeEvent(input$advanceN, {

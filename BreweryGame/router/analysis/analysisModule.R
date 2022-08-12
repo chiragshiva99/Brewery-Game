@@ -24,33 +24,6 @@ analysisModuleUI <- function(id) {
     demandPlotModuleUI(ns("demand")),
     materialPlotModuleUI(ns("material")),
     lostPlotModuleUI(ns("lost"))
-    # fluidRow(
-    #   
-    #   box(width=12,
-    #       collapsed = T,
-    #     title="Tank Status",
-    #     tankPlotModuleUI(ns("tank"))
-    #   ),
-    #   box(
-    #     beerPlotModuleUI(ns("beer"))
-    #   ),
-    #   box(
-    #     # call demandPlotModule in UI
-    #     demandPlotModuleUI(ns("demand"))
-    #   ),
-    #   
-    #   box(width=12,
-    #       collapsed = T,
-    #     title="Material inventory Levels",
-        # # call materialPlotModule in UI
-        
-      # ),
-      # box(width=12,
-      #   collapsed = T,
-      #   title="Lost Sales",
-      #   
-      # )
-      
   )
 }
 

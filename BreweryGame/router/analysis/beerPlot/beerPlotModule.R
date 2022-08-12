@@ -7,7 +7,6 @@ beerPlotModuleUI <- function(id) {
     fluidRow(
       column(width=1,
              dropdownButton(
-               
                tags$h3("List of Inputs"),
                htmlOutput(ns("beerInput")),
                

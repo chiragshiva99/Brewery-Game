@@ -35,6 +35,8 @@ progressModuleServer <- function(id, material, beer, demand, general, beerInfo, 
       AUTO <- beerTankModuleServer("beer", beer, tanks, AUTO, general)
       totalDemandModuleServer("totalDemand", demand, beerInfo, customerInfo)
       
+      
+      
       return(AUTO)
     }
   )

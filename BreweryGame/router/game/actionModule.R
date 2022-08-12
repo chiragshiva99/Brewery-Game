@@ -1,7 +1,33 @@
 actionModuleUI <- function(id) {
   ns <- NS(id)
   div(
-    h2("Actions"),
+    fluidRow(
+      column(
+        width=4,
+        h2("Actions")
+      ),
+      column(
+        width=4,
+        dropdownButton(
+          label="Supplier List",
+          htmlOutput(ns("supplierFilter")),
+          htmlOutput(ns("supplierList")),
+          circle = F, status = "info",
+          icon = icon("shopping-cart"), width = "400px",
+          tooltip = tooltipOptions(title = "Click to see Suppliers!")
+        )
+      ),
+      column(
+        width=4,
+        dropdownButton(
+          label="Recipe List",
+          htmlOutput(ns("beerRecipes")),
+          circle = F, status = "info",
+          icon = icon("beer"), width = "300px",
+          tooltip = tooltipOptions(title = "Click to see Beer Recipes!")
+        )
+      )
+    ),
     uiOutput(ns("actionTab"))
   )
 
@@ -40,6 +66,55 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
         )
 
         return(tabBox(id=ns("action"), width=NULL, collapsible=F, solidHeader=TRUE,status="maroon", .list=actionTabs, selected=selected$tab))
+      })
+      
+      output$beerRecipes <- renderTable({
+        materials <- unique(beerReq[,"materialName"])
+        beers <- unique(beerReq[,"beerName"])
+        requirements <- as.data.frame(matrix(nrow=0, ncol=(1+length(materials))))
+        colnames(requirements) <- c("Beer", materials)
+        
+        for(drink in beers) {
+          data <- list()
+          data[["Beer"]] <- drink
+          for(mat in materials) {
+            idx <- which((beerReq$beerName==drink)& (beerReq$materialName==mat))
+            data[[mat]] <- beerReq[idx, "qty"]
+          }
+          requirements <- rbind(requirements, data)
+        }
+        
+        requirements
+      })
+      
+      output$supplierFilter <- renderUI({
+        materialList <- material$rawMatQty[,"name"]
+        materialList <- c("All", materialList)
+        radioGroupButtons(
+          inputId=ns("materialSelect"),
+          label="Filter by Material",
+          choices = materialList,
+          selected = "All",
+          justified=T,
+          checkIcon = list(
+            yes = icon("ok", lib="glyphicon")
+          )
+        )
+      })
+      
+      output$supplierList <- renderTable({
+        materialFilter <- input$materialSelect
+        if(is.null(materialFilter)) {
+          supplierInfo <- costInfo %>% rename(Material=materialName)
+        } else if (materialFilter == "All") {
+          supplierInfo <- costInfo %>% rename(Material=materialName)
+        } else {
+          supplierInfo <- costInfo %>% subset(materialName==materialFilter) %>% select(-materialName)
+        }
+        
+        
+        supplierInfo <- supplierInfo %>% rename(Supplier=supplierName, "Order Cost"=fixedCost, "Unit Cost"=variableCost, "Lead Time"=daysToComplete)
+        supplierInfo
       })
       
       matPurchaseModuleServer("material", general, material, costInfo, disabled, selected)

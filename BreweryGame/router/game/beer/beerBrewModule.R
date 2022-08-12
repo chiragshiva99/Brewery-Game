@@ -1,7 +1,7 @@
 beerBrewModuleUI <- function(id, tankOptions, beerOptions) {
   ns <- NS(id)
   div(
-    h4("Brew a Beer"),
+    h3("Brew a Beer"),
     selectInput(ns("tankSelect"), "Choose a Tank", choices=tankOptions),
     selectInput(ns("beerChosen"), "Choose a Beer", choices=beerOptions),
     htmlOutput(ns("beerReq")),

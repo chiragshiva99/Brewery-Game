@@ -1,6 +1,7 @@
 matPurchaseModuleUI <- function(id, materialOptions) {
   ns <- NS(id)
   div(
+    h3("Purchase Material"),
     selectInput(ns("matChosen"), "Choose a Material", choices=materialOptions),
     htmlOutput(ns("supplierCompare")),
     uiOutput(ns("supplierInput")),

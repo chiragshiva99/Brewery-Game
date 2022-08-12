@@ -1,7 +1,10 @@
+## File done by Gabriel
+
 pwd <- rstudioapi::askForPassword("AWS database password")
 options(AWSPassword=pwd)
 rm(pwd)
 
+# Taken from class activities
 getAWSConnection <- function(){
   conn <- dbConnect(
     drv = RMySQL::MySQL(),
@@ -9,7 +12,7 @@ getAWSConnection <- function(){
     host = "esddbinstance-1.ceo4ehzjeeg0.ap-southeast-1.rds.amazonaws.com",
     port = 3306,
     username = "project016",
-    password = getOption("AWSPassword"))
+    password = "SW6heC6y")
   conn
 }
 
@@ -18,7 +21,7 @@ addToTable <- function(table,dfin){
 
   columns <-  paste0(colnames(dfin), collapse=", ")
   dfin[sapply(dfin, is.character)] <- lapply(dfin[sapply(dfin, is.character)], function(x) paste0("\"",x,"\""))
-  print(dfin)
+  # print(dfin)
   for (i in 1:nrow(dfin)){
     conn <- getAWSConnection()
     values <- paste(dfin[i,], collapse=", ")
@@ -28,8 +31,8 @@ addToTable <- function(table,dfin){
     tryCatch(
       {  # This is not a SELECT query so we use dbExecute
         result <- dbExecute(conn,query)
-        print("Value added")
-        print(i)
+        # print("Value added")
+        # print(i)
         success <- TRUE
       }, error=function(cond){print("update: ERROR")
         print(cond)
@@ -44,11 +47,12 @@ addToTable <- function(table,dfin){
 
 }
 
+# Delete a set of data from a table
 deleteFromTable <- function(table, param) {
   conn <- getAWSConnection()
   
   if(length(param) == 0) {
-    print("no parameters passed to delte")
+    # print("no parameters passed to delte")
     return(F)
   }
   
@@ -66,7 +70,7 @@ deleteFromTable <- function(table, param) {
   tryCatch(
     {  # This is not a SELECT query so we use dbExecute
       result <- dbExecute(conn,query)
-      print(paste("deleteFrom" ,table, ": SUCCESS"))
+      # print(paste("deleteFrom" ,table, ": SUCCESS"))
       success <- TRUE
     }, error=function(cond){print("deleteFromTable: ERROR")
       print(cond)

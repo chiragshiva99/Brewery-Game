@@ -1,3 +1,4 @@
+# Done by Haohong
 source("router/userInfo/userInfoHelper.R")
 
 userInfoModuleUI <- function(id) {
@@ -23,6 +24,7 @@ userInfoModuleUI <- function(id) {
     )
   )
 }
+# Renders the userInfo page to display some userInfo
 
 userInfoModuleServer <- function(id, USER) {
   moduleServer(

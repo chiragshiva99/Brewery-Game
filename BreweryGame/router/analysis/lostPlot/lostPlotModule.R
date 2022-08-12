@@ -1,3 +1,6 @@
+## Module to plot Lost Customers and Sales
+## Done by Chirag
+
 lostPlotModuleUI <- function(id) {
   ns <- NS(id)
   box(width=12,
@@ -32,6 +35,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
     function(input, output, session){
       ns <- session$ns
       
+      # Create download button if data exists
       output$downloadCustOption <- renderUI({
         lostSales <- subset(stateData$demand, serviceDay == -1)
         
@@ -40,6 +44,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         }
       })
       
+      # Creat download button id data exists
       output$downloadOrderOption <- renderUI({
         lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
         
@@ -47,6 +52,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
           downloadBttn(ns('lostorderData'), 'Orders', style="bordered", size="sm")
         }
       })
+      
       
       output$lostorderData <- downloadHandler(
         filename=function() {
@@ -70,6 +76,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         }
       )
       
+      # Renders for the dropdown menu
       output$lostInput <- renderUI({
         
         div(
@@ -87,6 +94,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         )
       })
       
+      # Renders for the dropdown menu
       output$furtherDetail <- renderUI({
 
         
@@ -117,6 +125,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         )
       })
       
+      # Plots if there is data
       output$plotArea <- renderUI({
         beer <- stateData$beer
         demand <- stateData$demand
@@ -127,6 +136,7 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         }
       })
       
+      # Generates the plot
       output$lostPlot <- renderPlotly({
         lostSales <- subset(stateData$demand, serviceDay == -1)
         lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)

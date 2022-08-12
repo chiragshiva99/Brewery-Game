@@ -1,3 +1,5 @@
+# Done by Haohong
+# Gets the users personal leaderboard
 getLeaderboardUser <- function(userID) {
   conn <- getAWSConnection()
   print(userID)

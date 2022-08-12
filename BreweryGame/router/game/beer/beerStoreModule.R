@@ -1,3 +1,5 @@
+# Module was scrapped and no longer in use. 
+# Was a initial prototype of existing beerTankModule
 beerStoreModuleUI <- function(id) {
   ns <- NS(id)
   div(

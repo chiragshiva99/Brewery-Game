@@ -1,3 +1,6 @@
+## Done by Gabriel
+
+## Helps to temporarily store inputs in the automate tab
 updateTemp <- function(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMatS, tempBeerR) {
   
   for (i in 1:nrow(materialInfo)) {
@@ -20,6 +23,7 @@ updateTemp <- function(input, materialInfo, beerInfo, tempMatQ, tempMatR, tempMa
   ))
 }
 
+# Creates a list of logicals and anmes them based on the material/beer
 createLogicalList <- function(reVals, info, type) {
   logicals <- c()
   for(i in 1:length(reVals)) {

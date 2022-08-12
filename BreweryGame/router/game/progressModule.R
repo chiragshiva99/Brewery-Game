@@ -1,3 +1,4 @@
+# Module for the rendering of the progress tracker box
 progressModuleUI <- function(id) {
   ns <- NS(id)
   div(

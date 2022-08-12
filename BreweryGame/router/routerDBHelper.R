@@ -1,3 +1,6 @@
+## File created by Gabriel
+
+# Get current Game ID from dbeaver
 getGameID <- function(userID, connect=NULL) {
   if(is.null(connect)) {
     conn <- getAWSConnection()
@@ -15,6 +18,7 @@ getGameID <- function(userID, connect=NULL) {
   return(result)
 }
 
+# creates gameID of user
 createGame <- function(userID, conditionID=1) {
   conn <- getAWSConnection()
   
@@ -51,6 +55,7 @@ createGame <- function(userID, conditionID=1) {
   return(gameID)
 }  
 
+# Updates gameID for user
 updateGameID <- function(userID, gameID) {
   conn <- getAWSConnection()
   
@@ -63,6 +68,7 @@ updateGameID <- function(userID, gameID) {
   result
 }
 
+# Delete all the data from a certain game for users
 deleteGame <- function(userID, gameID, range=c(1:length(tables))) {
   tables <- c("beerTrack", "materialTrack", "cashTrack", "demandTrack", "tankTrack", "gameTrack")
   results <- c()

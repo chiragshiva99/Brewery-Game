@@ -1,3 +1,5 @@
+# Done by Chirag
+# Gets user credentials
 getCredentials <- function(username) {
   #open the connection
   conn <- getAWSConnection()
@@ -12,7 +14,7 @@ getCredentials <- function(username) {
   if (nrow(result)!=1){
     result <- data.frame(userID=0, username=NA, password=NA, curGameID=NA)
   } 
-  print(result)
+  # print(result)
   
   #Close the connection
   dbDisconnect(conn)
@@ -20,6 +22,7 @@ getCredentials <- function(username) {
   
 }
 
+# Gets userID
 getUserID <- function(username, connect=NULL) {
   if(is.null(connect)) {
     conn <- getAWSConnection()
@@ -50,6 +53,7 @@ createNewUserQuery <- function(conn,username,password){
   query <- sqlInterpolate(conn, querytemplate,id1=username,id2=password)
 }  
 
+# Registers the user
 registerUser <- function(username, password){
   #open the connection
   conn <- getAWSConnection()

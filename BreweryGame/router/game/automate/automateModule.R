@@ -1,3 +1,5 @@
+## Done by Gabriel
+
 automateModuleUI <- function(id) {
   ns <- NS(id)
   div(
@@ -49,6 +51,7 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
         tempBeerR[[paste0("beer", beerInfo[i, "name"])]] <- 0
       }
       
+      ## Allows user to set all automated
       observeEvent(input$allAuto, {
         if(!is.null(input$allAuto)) {
           if(input$allAuto) {
@@ -187,6 +190,11 @@ automateModuleServer <- function(id, AUTO, materialInfo, beerInfo, costInfo, sel
         )
       })
       
+      ### ALL the above are related to generating the switches in the tab
+      
+      ### Generates the table for users to key their input for materials and beer automation
+      ### The inputs and values update depending on the state of updating
+      ### Generates it programmatically so it is dynamic supposedly
       output$materialInput <- renderUI({
         div(
           tags$table(class="table table-sm",

@@ -1,3 +1,5 @@
+
+# Helps intialize game arguments
 initGameArgs <- function(INIT) {
   
   INIT$tanks <-  getTankDF(INIT$tankOptions$tankNo, INIT$tankOptions$tankSize)

@@ -1,3 +1,4 @@
+## Module to display beer Inventory
 beerInvUI <- function(id) {
   ns <- NS(id)
   tableOutput(ns("beerInv"))

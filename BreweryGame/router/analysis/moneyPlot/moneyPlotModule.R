@@ -1,3 +1,6 @@
+## Generates money Plot
+## Done by Chirag
+
 moneyPlotModuleUI <- function(id) {
   ns <- NS(id)
   box(width=12,
@@ -29,6 +32,7 @@ moneyPlotModuleServer <- function(id, stateData) {
     function(input, output, session) {
       ns <- session$ns
       
+      ## Download button functions
       output$downloadOption <- renderUI({
         if(nrow(stateData$cash) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
@@ -61,6 +65,7 @@ moneyPlotModuleServer <- function(id, stateData) {
         )
       })
       
+      # Checks if there is data to plot
       output$plotArea <- renderUI({
         cash <- stateData$cash
         if(nrow(cash) == 0) {
@@ -69,7 +74,9 @@ moneyPlotModuleServer <- function(id, stateData) {
           plotlyOutput(ns("moneyPlot"))
         }
       })
-
+      
+      
+      # Renders plot
       output$moneyPlot <- renderPlotly({
         type <- input$viewType
         # print(stateData$cash)

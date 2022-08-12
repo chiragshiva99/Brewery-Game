@@ -1,3 +1,4 @@
+# Module for the leaderboard tab
 source("router/leaderboard/leaderboardHelper.R")
 
 leaderboardModuleUI <- function(id) {
@@ -21,6 +22,7 @@ leaderboardModuleServer <- function(id, USER) {
   moduleServer(
     id,
     function(input, output, session) {
+      # Renders leaderboard
       output$leaderboard <- renderTable({
         click <- USER$finish
         scores <- getLeaderboard()

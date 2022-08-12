@@ -1,3 +1,5 @@
+## Creates dataframes that help in the storing of state
+
 getBaseData <- function(gameID, id, rowCount) {
   df <- data.frame(matrix(nrow=rowCount, ncol=2))
   colnames(df) <- c("gameID", "userID")

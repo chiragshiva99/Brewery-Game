@@ -1,3 +1,5 @@
+
+# Module to track the progress of material Orders
 matProgModuleUI <- function(id) {
   ns <- NS(id)
   div(
@@ -11,6 +13,7 @@ matProgModuleServer <- function(id, material) {
     function(input, output, session) {
       ns <- session$ns
       
+      # Generates current orders depending on the data
       output$currentOrders <- renderUI({
         if(nrow(material$rawMatOrder) == 0) {
           matStuff <- h3("No Material Orders Currently")

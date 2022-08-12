@@ -1,4 +1,5 @@
 ## Start game or continue Game
+# Gabriel
 gameChoice <- function(ns){
   div(id = "startGame", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
                   wellPanel(  

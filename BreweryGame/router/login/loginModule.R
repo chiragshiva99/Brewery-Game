@@ -1,3 +1,4 @@
+# Done by Chirag
 source("router/login/loginDBHelper.R")
 
 loginModuleUI <- function(id) {
@@ -92,6 +93,7 @@ loginModuleServer <- function(id, USER) {
       username=NA
       USER <- reactiveValues(id=id, gameID=gameID, login = loginInit, gameStart = gameStartInit, finish=finishInit, signup=signupInit, selectedTab = NULL, username=username)
       
+      # Checks if the user Logs in
       observe({ 
         if (USER$login == FALSE) {
           if (!is.null(input$login)) {
@@ -121,6 +123,7 @@ loginModuleServer <- function(id, USER) {
         }    
       })
       
+      # Toggles betwen pages depending on user signup or login
       output$page <- renderUI({
         if(USER$signup == T) {
           signuppage(ns)
@@ -137,6 +140,7 @@ loginModuleServer <- function(id, USER) {
         USER$signup <- F
       })
       
+      # Observes if the user signs up
       observeEvent(input$signupok, {
         username <- input$usernameSignup
         password <- input$passwordSignup

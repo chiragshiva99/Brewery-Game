@@ -1,3 +1,6 @@
+## Gabriel
+
+# Gets required amount for beer
 getReqAmt <- function(beer, reqTable, matQty, pID=1) {
   beerReqTable <- reqTable %>% subset(beerName == beer) %>% subset(processID == pID) %>% subset(select=c("materialName", "qty"))
   
@@ -32,6 +35,7 @@ getReqAmt <- function(beer, reqTable, matQty, pID=1) {
   text
 }
 
+# Checks whether there is enough material
 checkMaterialAmount <- function(beer, reqTable, matQty, pID=1) {
   enough <- T
   beerReqTable <- reqTable %>% subset(beerName == beer) %>% subset(processID == pID) %>% subset(select=c("materialName", "qty"))
@@ -47,7 +51,7 @@ checkMaterialAmount <- function(beer, reqTable, matQty, pID=1) {
   enough
 }
 
-
+# adds beer to tank
 addBeerToTank <- function(tanks, select, beer, beerInfo) {
   completeDays <- subset(beerInfo, name==beer)[1,"daysToComplete"]
   tanks[select, "daysToComplete"] <- completeDays

@@ -1,3 +1,5 @@
+## helper functions for advancing the game by day
+
 
 #### DEMAND RELATED ####
 serveCustomer <- function(i, general, demand, beer, beerInfo, customerInfo, customerDemand) {

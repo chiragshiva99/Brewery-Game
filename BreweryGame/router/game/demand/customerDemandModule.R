@@ -1,3 +1,5 @@
+## Gabriel
+
 notEnoughModal <- function(ns) {
   modalDialog(
     title="Not Enough Beer",
@@ -26,6 +28,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         }
       })
       
+      # Auto switch render
       output$autoSwitch <- renderUI({
         materialSwitch(
           inputId = ns("serveCustAuto"),
@@ -36,6 +39,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         )
       })
       
+      # Generates the table of customer demand
       output$custDemand <- renderUI({
         if(nrow(demand$dayDemand) == 0) {
           custStuff <- h3("No Customers Waiting")
@@ -92,6 +96,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         return(custStuff)
       })
       
+      # generates the buttons on whether they can serve
       observe({
         if(nrow(demand$dayDemand) > 0) {
           lapply(1:nrow(demand$dayDemand), function(i) {
@@ -127,6 +132,7 @@ customerDemandModuleServer <- function(id, demand, general, beer, beerInfo, cust
         }
       })
       
+      # Observes the serving buttons
       observe({
         if (nrow(demand$dayDemand)> 0) {
           lapply(1:nrow(demand$dayDemand), function(i) {

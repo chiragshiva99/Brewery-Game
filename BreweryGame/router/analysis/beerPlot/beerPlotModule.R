@@ -1,3 +1,6 @@
+## Module to Plot the Beer Data
+## Done by Chirag 
+
 beerPlotModuleUI <- function(id) {
   ns <- NS(id)
   box(
@@ -31,6 +34,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
     function(input, output, session) {
       ns <- session$ns
       
+      # Download button related
       output$downloadOption <- renderUI({
         if(nrow(stateData$beer) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
@@ -48,6 +52,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
         }
       )
       
+      # Plots if there is data
       output$plotArea <- renderUI({
         beer <- stateData$beer
         if(nrow(beer) == 0) {
@@ -57,6 +62,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
         }
       })
       
+      # Input for dropdown
       output$beerInput <- renderUI({
         ## Get options to put in checkboxGroup
         beerOptions <- beerInfo[, "name"]
@@ -86,6 +92,7 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
         )
       })
       
+      # Renders plot
       output$beerPlot <- renderPlotly({
         beer <- stateData$beer
         beerData <- beer %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name)

@@ -1,3 +1,4 @@
+# Helps reset game arguments
 resetGameArgs <- function(INIT, gameStateData, AUTO, general, beer, material, demand) {
 
   INIT$seed <- sample(1:2^15, 1)

@@ -8,34 +8,9 @@ source("router/tutorial/tutorialModule.R")
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
 
+
+## File done by Gabriel
 mytheme <- create_theme(
-  # bs4dash_vars(
-  #   navbar_light_color = "#bec5cb",
-  #   navbar_light_active_color = "#FFF",
-  #   navbar_light_hover_color = "#FFF"
-  # ),
-  # bs4dash_yiq(
-  #   contrasted_threshold = 10,
-  #   text_dark = "#FFF", 
-  #   text_light = "#272c30"
-  # ),
-  # bs4dash_layout(
-  #   main_bg = "#353c42"
-  # ),
-  # bs4dash_sidebar_light(
-  #   bg = "#272c30", 
-  #   color = "#bec5cb",
-  #   hover_color = "#FFF",
-  #   submenu_bg = "#272c30", 
-  #   submenu_color = "#FFF", 
-  #   submenu_hover_color = "#FFF"
-  # ),
-  # bs4dash_status(
-  #   primary = "#5E81AC", danger = "#BF616A", light = "#272c30"
-  # ),
-  # bs4dash_color(
-  #   gray_900 = "#FFF"
-  # ),
   bs4dash_font(
     size_base="0.8rem",
     weight_bold=900
@@ -101,6 +76,7 @@ routerModuleServer <- function(id) {
       
       USER <- loginModuleServer("login")
       
+      # Starts game for user
       observeEvent(input$startGame, {
           
           ## Delete previous Game activity if it is in progress
@@ -138,6 +114,7 @@ routerModuleServer <- function(id) {
       #   USER$gameStart <- T
       # })
       
+      # Renders user dropdown
       output$userDropdown <- renderUser({
         req(USER$login)
         dashboardUser(
@@ -151,6 +128,8 @@ routerModuleServer <- function(id) {
         )
       })
       
+      # Logs out the user
+      ## Code from https://www.listendata.com/2019/06/how-to-add-login-page-in-shiny-r.html
       output$logoutbtn <- renderUI({
         req(USER$login)
         tags$li(a(icon("fa fa-sign-out"), "Logout", 
@@ -160,6 +139,7 @@ routerModuleServer <- function(id) {
                     font-weight: bold; margin:5px; padding: 10px;")
       })
       
+      # Renders sidebar panel depending on conditions
       output$sidebarpanel <- renderUI({
         sidebarMenuItems <- list()
         counter <- 0
@@ -174,6 +154,7 @@ routerModuleServer <- function(id) {
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       
+      # Renders the body depending on conditions
       output$body <- renderUI({
         if (USER$login == T & USER$gameStart == T) {
           tabItems(
@@ -192,8 +173,8 @@ routerModuleServer <- function(id) {
         }
       })
       
+      # Updates users selected tab
       observe({
-        print(USER$selectedTab)
         updateTabItems(inputId="tabs", selected=USER$selectedTab)
       })
         
@@ -206,7 +187,10 @@ routerModuleServer <- function(id) {
       #### ANALYSIS ####
       analysisModuleServer("analysis", stateData)
       
+      #### Leaderboard ####
       leaderboardModuleServer("leader", USER)
+      
+      #### Tutorial ####
       tutorialModuleServer("tutorial")
     }
   )

@@ -1,3 +1,5 @@
+# Helper functions for the generation of initial demnad
+
 ## Demand
 generateDemand <- function(customer, iia, normParam, days, beer, maxWait) {
   demand <- data.frame(matrix(nrow=0, ncol=6))

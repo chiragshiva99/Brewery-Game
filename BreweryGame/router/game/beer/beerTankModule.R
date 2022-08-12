@@ -1,3 +1,6 @@
+## Generates Tanks in progress module
+
+# Creates the name of the png file for the tank
 tankImage <- function(tanks, i) {
   tankCond <- as.list(tanks[i, ])
   state <- "empty"
@@ -43,6 +46,7 @@ beerTankModuleServer <- function(id, beer, tanks, AUTO, general) {
         )
       })
       
+      # Programmatically generate the tank table
       output$tank <- renderUI({
         div(
           tags$table(class="table table-striped table-sm",

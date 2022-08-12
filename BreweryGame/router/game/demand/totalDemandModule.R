@@ -1,3 +1,4 @@
+## Tracks the total demand of all the beers
 totalDemandModuleUI <- function(id) {
   ns <- NS(id)
   div(

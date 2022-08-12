@@ -1,3 +1,7 @@
+####
+# All files in game are done by Gabriel
+####
+
 ## Customer Modules
 source("router/game/demand/customerLostModule.R")
 
@@ -33,31 +37,6 @@ source("router/game/gameHelper/stateHelper.R")
 source("router/game/gameHelper/advanceHelper.R")
 source("router/game/gameHelper/initHelper.R")
 source("router/game/gameHelper/resetHelper.R")
-
-resetDialog <- function(session) {
-  ns <- session$ns
-  modalDialog(
-    title="Reset?",
-    div("Are you sure you want to reset?"),
-    footer=tagList(
-      modalButton("Cancel"),
-      actionButton(ns("resetok"), "Reset")
-    )
-  )
-}
-
-endGameModal <- function(session) {
-  ns <- session$ns
-  modalDialog(
-    title="End of Game",
-    div("The game has ended!"),
-    footer=tagList(
-      actionButton(ns("resetok"), "Play Again!"),
-      actionButton(ns("gotoAnalysis"), "Analyse Performance")
-    )
-  )
-}
-
 
 gameModuleUI <- function(id, disabled=F) {
   ns <- NS(id)
@@ -173,6 +152,7 @@ gameModuleServer <- function(id, USER) {
         )
       })
       
+      # Renders day variable for user
       output$day <- renderbs4ValueBox({
         bs4ValueBox(
           h1(general$day), 
@@ -183,6 +163,7 @@ gameModuleServer <- function(id, USER) {
         )
       })
       
+      # Renders beer action counter
       output$actionCounter <- renderbs4ValueBox({
         bs4ValueBox(
           h1(paste0(general$action, "/", general$maxAction)),
@@ -222,6 +203,7 @@ gameModuleServer <- function(id, USER) {
         }
       })
       
+      # advance multiple days input
       output$advanceNInput <- renderUI({
         numericInput(
           ns("advDays"),
@@ -232,6 +214,7 @@ gameModuleServer <- function(id, USER) {
         )
       })
       
+      # advance multiple days button
       output$advanceNButton <- renderUI({
         actionBttn(
           inputId=ns("advanceN"), 
@@ -242,25 +225,12 @@ gameModuleServer <- function(id, USER) {
         )
       })
       
+      #advance button activation
       observeEvent(input$advance, {
         c(USER, AUTO, gameStateData, general, beer, material, demand) %<-% advanceDay(USER, AUTO, gameStateData, general, beer, material, demand, INIT)
-        
-        addTooltip(
-          id="money",
-          options=list(
-            title=div(
-              strong("Incurred Costs"),
-              br(),
-              paste0("Lost Revenue: ", general$lostRev),
-              br(),
-              paste0("Holding Cost: ", general$holdingCost),
-            ),
-            placement="bottom"
-          ),
-          session=session
-        )
       })
       
+      # advances multiple days
       observeEvent(input$advanceN, {
         if(as.integer(input$advDays) != input$advDays) {
           return(
@@ -307,6 +277,7 @@ gameModuleServer <- function(id, USER) {
         }
       })
       
+      # Checks if game is finished
       observe({
         if(USER$finish) {
           shinyjs::disable("advance")
@@ -315,15 +286,7 @@ gameModuleServer <- function(id, USER) {
         }
       })
       
-      output$gameStatus <- renderUI({
-        if (general$day > INIT$endDays) {
-          text <- "Game has Ended!"
-        } else {
-          text <- ""
-        }
-        text
-      })
-      
+      # Checks if game is about to end and simulates last 100 days
       observeEvent(general$day, {
         if(general$day == (INIT$endDay + 1)) {
           sendSweetAlert(
@@ -356,10 +319,13 @@ gameModuleServer <- function(id, USER) {
         disabled <- USER$finish
       })
       
+      ### Action Module
       AUTO <- actionModuleServer("action", general, beer, INIT$beerInfo, INIT$beerReq, material, INIT$costInfo, disabled, AUTO, demand, INIT$customerInfo, INIT$customerDemand, INIT$materialInfo)
       
+      ### Progress Module
       AUTO <- progressModuleServer("progress", material, beer, demand, general, INIT$beerInfo, INIT$customerInfo, INIT$customerDemand, INIT$tanks, AUTO)
       
+      ### Customer Lost Module
       customerLostServer("customerLost", demand)
       
       return(list(USER, gameStateData))

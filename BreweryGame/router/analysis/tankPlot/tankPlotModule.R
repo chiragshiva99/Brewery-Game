@@ -1,3 +1,6 @@
+## Tank Plot Module
+## Done by Chirag
+
 tankPlotModuleUI <- function(id) {
   ns <- NS(id)
   box(width=12,
@@ -30,6 +33,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
       
       ns <- session$ns
       
+      ## Download button related
       output$downloadOption <- renderUI({
         if(nrow(stateData$tank) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
@@ -50,6 +54,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
         }
       )
       
+      ## Filter related features
       output$tankInput <- renderUI({
         ## Get options to put in checkboxGroup
         beerOptions <- beerInfo[, "name"]
@@ -68,6 +73,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
         )
       })
       
+      # Plots data if it is available
       output$plotArea <- renderUI({
         tank <- stateData$tank
         if(nrow(tank) == 0) {
@@ -77,6 +83,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
         }
       })
       
+      # Renders plot
       output$tankPlot <- renderPlot({
         tank <- stateData$tank
         visTank <- createVisTank(tank)

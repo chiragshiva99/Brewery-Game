@@ -1,3 +1,5 @@
+# Creates the dark theme for the plots 
+# Done by Chirag
 darkTheme <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_size = 14) + 
   theme(plot.title = element_text(family = "Fira Sans Condensed"),
         plot.background = element_rect(fill = "grey25"),
@@ -8,6 +10,7 @@ darkTheme <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_siz
         axis.ticks = element_blank(),
         legend.key = element_blank())
 
+# Algorithm to convert data for plotting ## Gabriel
 createVisTank <- function(tank) {
   visTank <- data.frame(matrix(nrow=0, ncol=4))
   colnames(visTank) <- c("event", "group", "start", "end")

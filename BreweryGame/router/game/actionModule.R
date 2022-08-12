@@ -1,3 +1,6 @@
+# Tabs for the action box Module in the middle of the page
+
+## Done by Gabriel
 actionModuleUI <- function(id) {
   ns <- NS(id)
   div(
@@ -68,6 +71,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
         return(tabBox(id=ns("action"), width=NULL, collapsible=F, solidHeader=TRUE,status="maroon", .list=actionTabs, selected=selected$tab))
       })
       
+      # Renders beer Recipe dropdown
       output$beerRecipes <- renderTable({
         materials <- unique(beerReq[,"materialName"])
         beers <- unique(beerReq[,"beerName"])
@@ -87,6 +91,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
         requirements
       })
       
+      # Renders supplier options dropdown
       output$supplierFilter <- renderUI({
         materialList <- material$rawMatQty[,"name"]
         materialList <- c("All", materialList)
@@ -102,6 +107,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
         )
       })
       
+      # Renders list of suppliers
       output$supplierList <- renderTable({
         materialFilter <- input$materialSelect
         if(is.null(materialFilter)) {
@@ -117,6 +123,7 @@ actionModuleServer <- function(id, general, beer, beerInfo, beerReq, material, c
         supplierInfo
       })
       
+      # Modules within the action Module
       matPurchaseModuleServer("material", general, material, costInfo, disabled, selected)
       beerBrewModuleServer("beer", beer, material, beerInfo, beerReq, disabled, general, selected)
       customerDemandModuleServer("customer", demand, general, beer, beerInfo, customerInfo, customerDemand, AUTO, selected)

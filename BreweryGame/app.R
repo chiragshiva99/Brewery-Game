@@ -1,18 +1,9 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/  
-#
+### Overall distribution
+# Chirag: analysis and login folder
+# Haohong: leaderboard, userInfo and tutorial folder
+# Noel: content of tutorial folder
+# Gabriel: game folder and touch up of everyones code
 
-# At the beginning of any R session, record your AWS database password:
-
-# Now, anywhere in your code where the password is needed you can get it using
-# getOption("AWSPassword")
-# Otherwise it is hidden. So now this code can be shared with anyone 
-# without giving them access to your personal AWS database.
 
 source("usePackages.R")
 pkgnames <- c("tidyverse","shiny", "shinyjs","DBI","jsonlite","bs4Dash", "shinyauthr", "sodium", "shinyBS", "plotly", "shinyWidgets", "zeallot", "ggalt", "fresh", "ggdark", "RMySQL")

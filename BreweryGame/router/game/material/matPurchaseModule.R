@@ -1,3 +1,4 @@
+# Module for the purchasing of materials
 matPurchaseModuleUI <- function(id, materialOptions) {
   ns <- NS(id)
   div(
@@ -22,7 +23,7 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled, s
       
       output$purchaseButton <- renderUI({
         color <- "success"
-        print(input$purchQty)
+        # print(input$purchQty)
         
         if(is.na(input$purchQty)) {
           color <- "danger"

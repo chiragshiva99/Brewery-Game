@@ -1,3 +1,4 @@
+## Module for the rendering of the inventory box
 invModuleUI <- function(id) {
   ns <- NS(id)
   div(

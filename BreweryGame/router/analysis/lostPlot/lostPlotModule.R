@@ -1,14 +1,23 @@
 lostPlotModuleUI <- function(id) {
   ns <- NS(id)
-  fluidPage(
-    dropdownButton(
-      
-      tags$h3("List of Inputs"),
-      htmlOutput(ns("lostInput")),
-      
-      circle = F, status = "primary",
-      icon = icon("gear"), width = "300px",
-      tooltip = tooltipOptions(title = "Click to see inputs !")
+  box(width=12,
+      collapsed = T,
+      title="Lost Customers/Orders",
+    fluidRow(
+      column(width=1,
+             dropdownButton(
+               
+               tags$h3("List of Inputs"),
+               htmlOutput(ns("lostInput")),
+               
+               circle = F, status = "primary",
+               icon = icon("gear"), width = "300px",
+               tooltip = tooltipOptions(title = "Click to see inputs !")
+             ),
+      ),
+      column(width=6,
+             htmlOutput(ns("downloadOption"))
+      ),
     ),
     plotlyOutput(ns("lostPlot"))
   )
@@ -19,6 +28,23 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
     id, 
     function(input, output, session){
       ns <- session$ns
+      
+      output$downloadOption <- renderUI({
+        if(nrow(stateData$demand) > 0 ) {
+          downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
+        }
+      })
+      
+      output$downloadData <- downloadHandler(
+        filename=function() {
+          paste0('demandData-Day-',max(stateData$cash$gameDay))
+        },
+        content=function(con) {
+          demandData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          
+          write.csv(demandData, con)
+        }
+      )
       
       output$lostInput <- renderUI({
         

@@ -6,6 +6,7 @@ source("router/analysis/lostPlot/lostPlotModule.R")
 source("router/analysis/beerPlot/beerPlotModule.R")
 source("router/analysis/tankPlot/tankPlotModule.R")
 source("router/analysis/materialPlot/materialPlotModule.R")
+source("router/analysis/moneyPlot/moneyPlotModule.R")
 
 
 
@@ -17,41 +18,39 @@ analysisModuleUI <- function(id) {
     fluidRow(
       h1("Analysis!!"),
     ),
-    fluidRow(
-      box(width=12,
-          collapsed = T,
-        title="Money",
-        plotlyOutput(ns("moneyPlot"))
-      ),
-      box(width=12,
-          collapsed = T,
-        title="Tank Status",
-        tankPlotModuleUI(ns("tank"))
-      ),
-      box(width=12,
-          collapsed = T,
-        title="Beer inventory levels",
-        beerPlotModuleUI(ns("beer"))
-      ),
-      box(width=12,
-          collapsed = T,
-        title="Beer Demand",
-        # call demandPlotModule in UI
-        demandPlotModuleUI(ns("demand"))
-      ),
-      box(width=12,
-          collapsed = T,
-        title="Material inventory Levels",
+    moneyPlotModuleUI(ns("money")),
+    tankPlotModuleUI(ns("tank")),
+    beerPlotModuleUI(ns("beer")),
+    demandPlotModuleUI(ns("demand")),
+    materialPlotModuleUI(ns("material")),
+    lostPlotModuleUI(ns("lost"))
+    # fluidRow(
+    #   
+    #   box(width=12,
+    #       collapsed = T,
+    #     title="Tank Status",
+    #     tankPlotModuleUI(ns("tank"))
+    #   ),
+    #   box(
+    #     beerPlotModuleUI(ns("beer"))
+    #   ),
+    #   box(
+    #     # call demandPlotModule in UI
+    #     demandPlotModuleUI(ns("demand"))
+    #   ),
+    #   
+    #   box(width=12,
+    #       collapsed = T,
+    #     title="Material inventory Levels",
         # # call materialPlotModule in UI
-        materialPlotModuleUI(ns("material"))
-      ),
-      box(width=12,
-        collapsed = T,
-        title="Lost Sales",
-        lostPlotModuleUI(ns("lost"))
-      )
+        
+      # ),
+      # box(width=12,
+      #   collapsed = T,
+      #   title="Lost Sales",
+      #   
+      # )
       
-    )
   )
 }
 
@@ -65,6 +64,7 @@ analysisModuleServer <- function(id, stateData, input, output) {
       beerInfo <- getBeerInfo()
       customerInfo <- getCustomerInfo()
       
+      moneyPlotModuleServer("money", stateData)
       # Call demandPlot Module in Server
       demandPlotModuleServer("demand", stateData, beerInfo, customerInfo)
       beerPlotModuleServer("beer", stateData, beerInfo)
@@ -72,19 +72,7 @@ analysisModuleServer <- function(id, stateData, input, output) {
       materialPlotModuleServer("material", stateData, materialInfo)
       tankPlotModuleServer("tank", stateData, beerInfo)
       
-      output$moneyPlot <- renderPlotly({
-        # print(stateData$cash)
-        p <- ggplot(stateData$cash, aes(gameDay, cashBalance)) +
-          geom_step(size = 1, color = "green") +
-          # geom_hline(mapping=aes(yintercept = 100000), color="grey", size= 0.5, alpha = 0.8) +
-          # geom_text(mapping=aes(0, y = 100000,label = "Initial Revenue", vjust = -1, hjust = 0), color = 'white') +
-          labs(title="Cash Balance generated everyday", 
-               x = "Game Day",
-               y = "Cash Balance ($)"
-          )+darkTheme 
-        
-        ggplotly(p)
-      })
+      
       
     }
   )

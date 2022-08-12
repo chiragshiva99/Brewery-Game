@@ -3,6 +3,7 @@ source("router/analysis/analysisModule.R")
 source("router/login/loginModule.R")
 source("router/userInfo/userInfoModule.R")
 source("router/leaderboard/leaderboardModule.R")
+source("router/tutorial/tutorialModule.R")
 
 source("router/gameChoicePage.R")
 source("router/routerDBHelper.R")
@@ -162,12 +163,14 @@ routerModuleServer <- function(id) {
       output$sidebarpanel <- renderUI({
         sidebarMenuItems <- list()
         counter <- 0
-        
-        sidebarMenuItems[[1]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("user"))
-        sidebarMenuItems[[2]] <- menuItem("Main Page", tabName = "game", icon = icon("gamepad"))
-        sidebarMenuItems[[3]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
-        sidebarMenuItems[[4]] <- menuItem("Leaderboard", tabName = "leaderTab", icon = icon("star"))
-        
+        if(USER$login == T & USER$gameStart == T) {
+          sidebarMenuItems[[1]] <- menuItem("User Info", tabName = "userInfoTab", icon=icon("user"))
+          sidebarMenuItems[[2]] <- menuItem("Main Page", tabName = "game", icon = icon("gamepad"))
+          sidebarMenuItems[[3]] <- menuItem("Analysis Page", tabName = "analysisTab", icon = icon("dashboard"))
+          sidebarMenuItems[[4]] <- menuItem("Leaderboard", tabName = "leaderTab", icon = icon("star"))
+          sidebarMenuItems[[5]] <- menuItem("Tutorial", tabName = "tutorialTab", icon = icon("person-chalkboard"))
+          
+        }
         return(sidebarMenu(id=ns("tabs"), .list=sidebarMenuItems))
       })
       
@@ -177,7 +180,8 @@ routerModuleServer <- function(id) {
             userInfoModuleUI(ns("user")),
             gameModuleUI(ns("game")),
             analysisModuleUI(ns("analysis")),
-            leaderboardModuleUI(ns("leader"))
+            leaderboardModuleUI(ns("leader")),
+            tutorialModuleUI(ns("tutorial"))
           )
         }
         else if (USER$login == T & USER$gameStart == F & USER$finish == F) {
@@ -203,6 +207,7 @@ routerModuleServer <- function(id) {
       analysisModuleServer("analysis", stateData)
       
       leaderboardModuleServer("leader", USER)
+      tutorialModuleServer("tutorial")
     }
   )
 }

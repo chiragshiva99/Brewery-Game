@@ -8,8 +8,8 @@ getReqAmt <- function(beer, reqTable, matQty, pID=1) {
   text <- substr(text, 1, nchar(text)-2)
   text <- paste0(text,".")
   
-  print(beerReqTable)
-  print(matQty)
+  # print(beerReqTable)
+  # print(matQty)
   beerReqTable <- beerReqTable %>% rename(reqQty = qty) %>% rename(name=materialName)
   checkAmtTable <- merge(beerReqTable, matQty, by=c("name"), all.x=T)
   shinyjs::enable("brewBeer")

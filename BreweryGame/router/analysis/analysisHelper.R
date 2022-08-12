@@ -24,7 +24,9 @@ createVisTank <- function(tank) {
       next
     }
     index <- max(indexes)
-    
+    print(index)
+    print(visTank)
+    print(data)
     if((nrow(subset(visTank, group==data$group))>0) & (visTank[index, "end"] + 1 == start)) {
       visTank[index, "end"] <- start
       next

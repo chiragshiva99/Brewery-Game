@@ -33,12 +33,12 @@ getUserID <- function(username, connect=NULL) {
   # print(result)
 
   # prevent SQL insertion attacks
-  if (nrow(result)==1){
-    return(result)
-  } else {
-    print(result) #for debugging
-    userid <- 0
-  }
+  # if (nrow(result)==1){
+  #   return(result)
+  # } else {
+  #   print(result) #for debugging
+  #   userid <- 0
+  # }
   if (is.null(connect)) {
     dbDisconnect(conn)
   }

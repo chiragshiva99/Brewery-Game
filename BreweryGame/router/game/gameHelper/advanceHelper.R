@@ -98,7 +98,11 @@ checkUnsatisfiedCust <- function(general, demand, beer, beerInfo, customerInfo) 
     
     demand$lostPerBeer[lostIdx, "lostQty"] <- demand$lostPerBeer[lostIdx, "lostQty"] + qty
     beerLostRev <- qty*demand$lostPerBeer[lostIdx, "stockOut"]
-    general$money <- general$money - beerLostRev
+    if(general$money - beerLostRev < 0) {
+      general$money <- 0
+    } else {
+      general$money <- general$money - beerLostRev
+    }
     
     # Tracking Stats
     lostRev <- lostRev + beerLostRev
@@ -314,7 +318,11 @@ advanceDay <- function(USER, AUTO, gameStateData, general, beer, material, deman
   
   # holding Cost
   holdingCost <- calculateHoldingCost(beer, material, INIT)
-  general$money <- general$money - holdingCost
+  if(general$money - holdingCost < 0) {
+    general$money <- 0
+  } else {
+    general$money <- general$money - holdingCost
+  }
   general$holdingCost <- general$holdingCost + holdingCost
   
   ## Get interest

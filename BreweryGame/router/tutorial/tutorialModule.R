@@ -138,7 +138,7 @@ tutorialModuleUI <- function(id) {
 "
         ),
         tags$img(
-          src="tutrial/advance.png",
+          src="tutorial/advance.png",
           style="width:35%;"
         ),
         tags$p(

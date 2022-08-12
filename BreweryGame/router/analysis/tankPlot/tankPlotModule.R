@@ -46,7 +46,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
           
           visTank <- visTank %>% rename(beerID=event) %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name, Tank=group) %>% select(Tank, Beer, start, end)
           
-          write.csv(visTank, con)
+          write.csv(tank, con)
         }
       )
       

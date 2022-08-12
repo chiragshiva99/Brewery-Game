@@ -8,7 +8,7 @@ moneyPlotModuleUI <- function(id) {
                    dropdownButton(
                      
                      tags$h3("List of Inputs"),
-                     htmlOutput(ns("beerInput")),
+                     htmlOutput(ns("cashInput")),
                      
                      circle = F, status = "primary",
                      icon = icon("gear"), width = "300px",
@@ -34,7 +34,7 @@ moneyPlotModuleServer <- function(id, stateData) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
         }
       })
-      
+    
       output$downloadData <- downloadHandler(
         filename=function() {
           paste0('cashData-Day-',max(stateData$cash$gameDay))
@@ -46,16 +46,61 @@ moneyPlotModuleServer <- function(id, stateData) {
         }
       )
       
+      output$cashInput <- renderUI({
+        radioGroupButtons(
+          inputId=ns("viewType"),
+          label=NULL,
+          choiceNames=c("Cash Balance", "Revenue", "Lost Revenue", "Holding Cost"),
+          choiceValues=c("cashBalance", "revenue", "lostRev", "holdingCost"),
+          selected = "cashBalance",
+          justified = TRUE,
+          checkIcon = list(
+            yes = icon("ok",
+                       lib = "glyphicon"))
+          
+        )
+      })
+
       output$moneyPlot <- renderPlotly({
+        type <- input$viewType
         # print(stateData$cash)
-        p <- ggplot(stateData$cash, aes(gameDay, cashBalance)) +
-          geom_step(size = 1, color = "green") +
-          # geom_hline(mapping=aes(yintercept = 100000), color="grey", size= 0.5, alpha = 0.8) +
-          # geom_text(mapping=aes(0, y = 100000,label = "Initial Revenue", vjust = -1, hjust = 0), color = 'white') +
-          labs(title="Cash Balance generated everyday", 
-               x = "Game Day",
-               y = "Cash Balance ($)"
-          )+darkTheme 
+        if(is.null(type)) {
+          type <- "cashBalance"
+        }
+        
+        if(is.na(type)) {
+          type <- "cashBalance"
+        }
+        
+        if(type == "cashBalance") {
+          p <- ggplot(stateData$cash, aes(gameDay, cashBalance)) +
+            geom_step(size = 1, color = "green") +
+            labs(title="Cash Balance", 
+                 x = "Game Day",
+                 y = "Cash Balance ($)"
+            )+darkTheme 
+        } else if (type == "revenue") {
+          p <- ggplot(stateData$cash, aes(gameDay, revenue)) +
+            geom_bar(position="stack", stat="identity", color = "green") +
+            labs(title="Revenue by day", 
+                 x = "Game Day",
+                 y = "Revenue ($)"
+            )+darkTheme 
+        } else if (type == "lostRev") {
+          p <- ggplot(stateData$cash, aes(gameDay, lostRev)) +
+            geom_bar(position="stack", stat="identity", color = "red") +
+            labs(title="Lost Revenue by day", 
+                 x = "Game Day",
+                 y = "Lost Revenue ($)"
+            )+darkTheme 
+        } else if (type == "holdingCost") {
+          p <- ggplot(stateData$cash, aes(gameDay, holdingCost)) +
+            geom_bar(position="stack", stat="identity", color = "red") +
+            labs(title="Holding Cost by day", 
+                 x = "Game Day",
+                 y = "Holding Cost ($)"
+            )+darkTheme 
+        }
         
         ggplotly(p)
       })

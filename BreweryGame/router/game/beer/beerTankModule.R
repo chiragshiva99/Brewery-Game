@@ -15,6 +15,7 @@ tankImage <- function(tanks, i) {
 beerTankModuleUI <- function(id) {
   ns <- NS(id)
   div(
+    h4("Each Tank produces 100 Beers"),
     uiOutput(ns("autoSwitch")),
     uiOutput(ns("tank"))
   )

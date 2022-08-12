@@ -6,7 +6,7 @@ calculateCost <- function(costInfo, mat, supplier, qty){
 }
 
 orderMaterial <- function(general, material, costInfo, matChosen, quantity, supplier) {
-  newEntry <- data.frame(Material=matChosen, Quantity=quantity, Days=0, Supplier=supplier, daysToComplete=costInfo[which(costInfo$materialName == matChosen), "daysToComplete"])
+  newEntry <- data.frame(Material=matChosen, Quantity=quantity, Days=0, Supplier=supplier, daysToComplete=costInfo[which((costInfo$materialName == matChosen) & (costInfo$supplierName== supplier)), "daysToComplete"])
   
   cost <- calculateCost(costInfo, matChosen, supplier, quantity)
   

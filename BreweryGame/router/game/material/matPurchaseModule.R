@@ -21,17 +21,26 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled, s
       setQty <- reactive(0)
       
       output$purchaseButton <- renderUI({
-        amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
-        
         color <- "success"
+        print(input$purchQty)
+        
+        if(is.na(input$purchQty)) {
+          color <- "danger"
+          return(
+            actionBttn(ns("purchaseok"), "Confirm Purchase", style="jelly", color=color)
+          )
+        }
         if(is.null(input$purchQty)) {
           color <- "danger"
+          return(
+            actionBttn(ns("purchaseok"), "Confirm Purchase", style="jelly", color=color)
+          )
         } else if (is.na(input$purchQty)){
           color <- "danger"
         } else if((input$purchQty < 1) | (input$purchQty != as.integer(input$purchQty))) {
           color <- "danger"
         }
-
+        amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
         if(!is.null(input$purchQty)) {
           if(amt > general$money) {
             color <- "danger"
@@ -61,6 +70,14 @@ matPurchaseModuleServer <- function(id, general, material, costInfo, disabled, s
       
       output$costOfPurchase <- renderUI({
         # shinyjs::disable("purchaseok")
+        
+        if(is.na(input$purchQty)) {
+          return("Please input a value")
+        }
+        if(is.null(input$purchQty)) {
+          return("Please input a value")
+        }
+        
         amt <- calculateCost(costInfo, input$matChosen, input$supplierChosen, input$purchQty)
         
         if (is.null(input$purchQty)) {

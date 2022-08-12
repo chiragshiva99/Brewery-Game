@@ -113,9 +113,9 @@ gameModuleServer <- function(id, USER) {
         dbStore=F,
         condition=1,
         tankOptions=list(tankNo=4, tankSize=100),
-        startingMoney=100000,
-        totalDays=200,
-        endDays=100,
+        startingMoney=5000,
+        totalDays=490,
+        endDays=390,
         initDay=51,
         interestRate=0.1
       )
@@ -347,7 +347,7 @@ gameModuleServer <- function(id, USER) {
       })
       
       ### Inventory
-      invModuleServer("inventory", beer, material)
+      invModuleServer("inventory", beer, material, INIT$beerInfo, INIT$materialInfo)
       
       
       ## Tanks and Beers

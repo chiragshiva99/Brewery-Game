@@ -31,19 +31,22 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
       ns <- session$ns
       
       output$downloadOption <- renderUI({
-        if(nrow(stateData$demand) > 0 ) {
+        if(nrow(stateData$tank) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
         }
       })
       
       output$downloadData <- downloadHandler(
         filename=function() {
-          paste0('demandData-Day-',max(stateData$cash$gameDay))
+          paste0('tankData-Day-',max(stateData$cash$gameDay))
         },
         content=function(con) {
-          demandData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          tank <- stateData$tank
+          visTank <- createVisTank(tank)
           
-          write.csv(demandData, con)
+          visTank <- visTank %>% rename(beerID=event) %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name, Tank=group) %>% select(Tank, Beer, start, end)
+          
+          write.csv(visTank, con)
         }
       )
       
@@ -67,9 +70,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
       
       output$tankPlot <- renderPlot({
         tank <- stateData$tank
-        print(tank)
         visTank <- createVisTank(tank)
-        print(visTank)
         
         beerSelected <- input$beerSelect
         
@@ -91,7 +92,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
                y = "Tank No."
           ) +
           darkTheme
-        
+        print(p)
         p
       })
     }

@@ -15,8 +15,11 @@ lostPlotModuleUI <- function(id) {
                tooltip = tooltipOptions(title = "Click to see inputs !")
              ),
       ),
-      column(width=6,
-             htmlOutput(ns("downloadOption"))
+      column(width=3,
+             htmlOutput(ns("downloadCustOption"))
+      ),
+      column(width=3,
+             htmlOutput(ns("downloadOrderOption"))
       ),
     ),
     plotlyOutput(ns("lostPlot"))
@@ -29,20 +32,41 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
     function(input, output, session){
       ns <- session$ns
       
-      output$downloadOption <- renderUI({
-        if(nrow(stateData$demand) > 0 ) {
-          downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
+      output$downloadCustOption <- renderUI({
+        lostSales <- subset(stateData$demand, serviceDay == -1)
+        
+        if(nrow(lostSales) > 0 ) {
+          downloadBttn(ns('lostcustData'), 'Customers', style="bordered", size="sm")
         }
       })
       
-      output$downloadData <- downloadHandler(
+      output$downloadOrderOption <- renderUI({
+        lostBeer <- select(stateData$beer, gameDay, beerID, lostSale)
+        
+        if(nrow(lostBeer) > 0 ) {
+          downloadBttn(ns('lostorderData'), 'Orders', style="bordered", size="sm")
+        }
+      })
+      
+      output$lostorderData <- downloadHandler(
         filename=function() {
-          paste0('demandData-Day-',max(stateData$cash$gameDay))
+          paste0('lostorderData-Day-',max(stateData$cash$gameDay))
         },
         content=function(con) {
-          demandData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          lostBeer <- stateData$beer %>% left_join(beerInfo, by=c("beerID")) %>% select(gameDay, name, lostSale)
           
-          write.csv(demandData, con)
+          write.csv(lostBeer, con)
+        }
+      )
+      
+      output$lostcustData <- downloadHandler(
+        filename=function() {
+          paste0('lostcustData-Day-',max(stateData$cash$gameDay))
+        },
+        content=function(con) {
+          lostSales <- subset(stateData$demand, serviceDay == -1) %>% left_join(customerInfo, by=c("customerID")) %>% count(gameDay, name) %>% rename(lostSale=n) %>% select(gameDay, lostSale)
+          
+          write.csv(lostSales, con)
         }
       )
       
@@ -124,9 +148,9 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
         print(plotData)
         p <- ggplot(data=plotData, mapping=aes(gameDay, lostSale, fill=variable)) +
           geom_bar(position="stack", stat="identity") +
-          labs(title="Beer Inventory Level", 
+          labs(title="Lost Orders", 
                x = "Game Day",
-               y = "Inventory",
+               y = "Quantity",
                fill = label
           ) + 
           darkTheme

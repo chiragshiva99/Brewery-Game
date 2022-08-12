@@ -2,7 +2,7 @@ materialPlotModuleUI <- function(id) {
   ns <- NS(id)
   box(width=12,
       collapsed = T,
-      title="Material Inventory",
+      title="Material Inventory Levels",
     fluidRow(
       column(width=1,
              dropdownButton(
@@ -30,19 +30,21 @@ materialPlotModuleServer <- function(id, stateData, materialInfo){
       ns <- session$ns
       
       output$downloadOption <- renderUI({
-        if(nrow(stateData$demand) > 0 ) {
+        if(nrow(stateData$mat) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
         }
       })
       
       output$downloadData <- downloadHandler(
         filename=function() {
-          paste0('demandData-Day-',max(stateData$cash$gameDay))
+          paste0('materialData-Day-',max(stateData$cash$gameDay))
         },
         content=function(con) {
-          demandData <- demand %>% left_join(customerInfo, by=c("customerID")) %>% rename(customerName=name) %>% left_join(beerInfo, by=c("beerID")) %>% rename(beerName=name)
+          material <- stateData$mat
+          materialData <- material %>% left_join(materialInfo, by=c("materialID")) %>% rename(Material=name) %>% select(gameDay, Material, inventory, inTransit)
+          materialData$total <- materialData$inTransit + materialData$inventory
           
-          write.csv(demandData, con)
+          write.csv(materialData, con)
         }
       )
       

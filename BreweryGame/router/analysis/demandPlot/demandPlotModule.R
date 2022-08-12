@@ -13,11 +13,11 @@ demandPlotModuleUI <- function(id) {
                  circle = F, status = "primary",
                  icon = icon("gear"), width = "300px",
                  tooltip = tooltipOptions(title = "Click to see inputs !")
+        )
         ),
         column(width=6,
                htmlOutput(ns("downloadOption"))
             ),
-          ),
       ),
       plotlyOutput(ns("demandPlot"))
   )

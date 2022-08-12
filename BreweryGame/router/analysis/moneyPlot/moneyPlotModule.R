@@ -27,6 +27,8 @@ moneyPlotModuleServer <- function(id, stateData) {
   moduleServer(
     id,
     function(input, output, session) {
+      ns <- session$ns
+      
       output$downloadOption <- renderUI({
         if(nrow(stateData$cash) > 0 ) {
           downloadBttn(ns('downloadData'), 'Download', style="bordered", size="sm")
@@ -40,7 +42,7 @@ moneyPlotModuleServer <- function(id, stateData) {
         content=function(con) {
           cashData <- stateData$cash
           
-          write.csv(beerData, con)
+          write.csv(cashData, con)
         }
       )
       

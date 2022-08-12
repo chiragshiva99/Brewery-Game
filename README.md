@@ -2,7 +2,7 @@
  
 ###### tags: `SUTD`
 
-# Team 23
+# Team 16
 - Chirag Shivakumar (1004996)
 - Yong Zhe Rui Gabriel (1005154) 
 - Haohong Xin (1005152)

@@ -1,5 +1,7 @@
 ### Code was done by HaoHong
 
+### Content done by Noel
+
 ## The module loads the tabItem tutorial
 tutorialModuleUI <- function(id) {
   ns <- NS(id)
@@ -89,6 +91,13 @@ tutorialModuleUI <- function(id) {
         ),
         tags$img(
           src="tutorial/tanks.png",
+          style="width:35%;"
+        ),
+        tags$p(
+          "However, be careful! Do take note of the holding cost involved when storing inventory. Running out of beer also has financial consequences if you are unable to serve a customer."
+        ),
+        tags$img(
+          src="tutorial/holdingCost.png",
           style="width:35%;"
         ),
         tags$p(

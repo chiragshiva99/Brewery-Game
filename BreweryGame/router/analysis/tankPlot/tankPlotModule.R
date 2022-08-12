@@ -19,7 +19,7 @@ tankPlotModuleUI <- function(id) {
              htmlOutput(ns("downloadOption"))
       ),
     ),
-    plotOutput(ns("tankPlot"))
+    htmlOutput(ns("plotArea"))
   )
 }
 
@@ -46,7 +46,7 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
           
           visTank <- visTank %>% rename(beerID=event) %>% left_join(beerInfo, by=c("beerID")) %>% rename(Beer=name, Tank=group) %>% select(Tank, Beer, start, end)
           
-          write.csv(tank, con)
+          write.csv(visTank, con)
         }
       )
       
@@ -66,6 +66,15 @@ tankPlotModuleServer <- function(id, stateData, beerInfo) {
             status = "primary"
           )
         )
+      })
+      
+      output$plotArea <- renderUI({
+        tank <- stateData$tank
+        if(nrow(tank) == 0) {
+          return(h2("No Data at the moment"))
+        } else {
+          plotOutput(ns("tankPlot"))
+        }
       })
       
       output$tankPlot <- renderPlot({

@@ -19,7 +19,7 @@ moneyPlotModuleUI <- function(id) {
                    htmlOutput(ns("downloadOption"))
             ),
           ),
-          plotlyOutput(ns("moneyPlot"))
+          htmlOutput(ns("plotArea"))
         )
 }
 
@@ -60,6 +60,15 @@ moneyPlotModuleServer <- function(id, stateData) {
           
         )
       })
+      
+      output$plotArea <- renderUI({
+        cash <- stateData$cash
+        if(nrow(cash) == 0) {
+          return(h2("No Data at the moment"))
+        } else {
+          plotlyOutput(ns("moneyPlot"))
+        }
+      })
 
       output$moneyPlot <- renderPlotly({
         type <- input$viewType
@@ -81,21 +90,21 @@ moneyPlotModuleServer <- function(id, stateData) {
             )+darkTheme 
         } else if (type == "revenue") {
           p <- ggplot(stateData$cash, aes(gameDay, revenue)) +
-            geom_bar(position="stack", stat="identity", color = "green") +
+            geom_bar(position="stack", stat="identity", fill = "green") +
             labs(title="Revenue by day", 
                  x = "Game Day",
                  y = "Revenue ($)"
             )+darkTheme 
         } else if (type == "lostRev") {
           p <- ggplot(stateData$cash, aes(gameDay, lostRev)) +
-            geom_bar(position="stack", stat="identity", color = "red") +
+            geom_bar(position="stack", stat="identity", fill = "red") +
             labs(title="Lost Revenue by day", 
                  x = "Game Day",
                  y = "Lost Revenue ($)"
             )+darkTheme 
         } else if (type == "holdingCost") {
           p <- ggplot(stateData$cash, aes(gameDay, holdingCost)) +
-            geom_bar(position="stack", stat="identity", color = "red") +
+            geom_bar(position="stack", stat="identity", fill = "red") +
             labs(title="Holding Cost by day", 
                  x = "Game Day",
                  y = "Holding Cost ($)"

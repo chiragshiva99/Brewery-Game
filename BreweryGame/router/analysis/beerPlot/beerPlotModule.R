@@ -21,7 +21,7 @@ beerPlotModuleUI <- function(id) {
       
       
     ),
-    plotlyOutput(ns("beerPlot"))
+    htmlOutput(ns("plotArea"))
   )
 }
 
@@ -47,6 +47,15 @@ beerPlotModuleServer <- function(id, stateData, beerInfo){
           write.csv(beerData, con)
         }
       )
+      
+      output$plotArea <- renderUI({
+        beer <- stateData$beer
+        if(nrow(beer) == 0) {
+          return(h2("No Data at the moment"))
+        } else {
+          plotlyOutput(ns("beerPlot"))
+        }
+      })
       
       output$beerInput <- renderUI({
         ## Get options to put in checkboxGroup

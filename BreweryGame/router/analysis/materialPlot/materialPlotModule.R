@@ -19,7 +19,7 @@ materialPlotModuleUI <- function(id) {
              htmlOutput(ns("downloadOption"))
       ),
     ),
-    plotlyOutput(ns("materialPlot"))
+    htmlOutput(ns("plotArea"))
   )
 }
 
@@ -77,6 +77,15 @@ materialPlotModuleServer <- function(id, stateData, materialInfo){
         )
       })
       
+      output$plotArea <- renderUI({
+        mat <- stateData$mat
+        if(nrow(mat) == 0) {
+          return(h2("No Data at the moment"))
+        } else {
+          plotlyOutput(ns("materialPlot"))
+        }
+      })
+      
       output$materialPlot <- renderPlotly({
         material <- stateData$mat
         materialData <- material %>% left_join(materialInfo, by=c("materialID")) %>% rename(Material=name)
@@ -112,8 +121,7 @@ materialPlotModuleServer <- function(id, stateData, materialInfo){
           p <- p + geom_step(aes(y=total, color=Material), size=1)
         }
         # geom_hline(mapping=aes(yintercept = 50), color="grey", size= 2, alpha = 0.8) +
-        p <- p + geom_text(mapping=aes(0, y = 50,label = "Recommended Reorder Point", vjust = -1, hjust = 0), color = 'white') +
-          labs(title="Material Inventory Level", 
+        p <- p + labs(title="Material Inventory Level", 
                x = "Game Day",
                y = "Inventory"
           )+darkTheme

@@ -22,7 +22,7 @@ lostPlotModuleUI <- function(id) {
              htmlOutput(ns("downloadOrderOption"))
       ),
     ),
-    plotlyOutput(ns("lostPlot"))
+    htmlOutput(ns("plotArea"))
   )
 }
 
@@ -115,6 +115,16 @@ lostPlotModuleServer <- function(id, stateData, beerInfo, customerInfo){
             status = "primary"
           )
         )
+      })
+      
+      output$plotArea <- renderUI({
+        beer <- stateData$beer
+        demand <- stateData$demand
+        if(nrow(beer) == 0 & nrow(demand) == 0) {
+          return(h2("No Data at the moment"))
+        } else {
+          plotlyOutput(ns("lostPlot"))
+        }
       })
       
       output$lostPlot <- renderPlotly({

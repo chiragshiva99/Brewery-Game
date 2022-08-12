@@ -11,8 +11,7 @@ darkTheme <- dark_theme_gray(base_family = "Fira Sans Condensed Light", base_siz
 createVisTank <- function(tank) {
   visTank <- data.frame(matrix(nrow=0, ncol=4))
   colnames(visTank) <- c("event", "group", "start", "end")
-  
-  
+
   for (entry in 1:nrow(tank)) {
     data <- list()
     data$group <- tank[entry, "tankID"]
@@ -20,14 +19,21 @@ createVisTank <- function(tank) {
     start <- tank[entry, "gameDay"]
     end <- tank[entry, "gameDay"]
     indexes <- which((visTank$group == data$group) & (visTank$event == data$event))
-    if(is.null(indexes)) {
+    # print("DEBUGGING")
+    # print(indexes)
+    if(identical(indexes, integer(0))) {
+      data$start <- start
+      data$end <- end
+      visTank <- rbind(visTank, data)
       next
     }
     index <- max(indexes)
-    print(index)
-    print(visTank)
-    print(data)
-    if((nrow(subset(visTank, group==data$group))>0) & (visTank[index, "end"] + 1 == start)) {
+    # print(index)
+    # print(visTank)
+    # print(data)
+    # print(paste0("Index ", entry))
+    
+    if(visTank[index, "end"] + 1 == start) {
       visTank[index, "end"] <- start
       next
     } else {
